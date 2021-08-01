@@ -307,6 +307,12 @@ class AddMaterial extends Component {
           <option id="7" value="plastic">
             PLASTIC
           </option>
+          <option id="115" value="aluminum">
+            ALUMINUM
+          </option>
+          <option id="116" value="PVC">
+          POLYVINYL CHOLRIDE (PVC)
+          </option>
           <option id="8" value="glass">
             GLASS
           </option>

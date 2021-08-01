@@ -759,6 +759,8 @@ class SetActualCosts extends Component {
 
     })
 
+    console.log(infoFiltered,infoFiltered.length);
+    console.log(matRequested,matRequested.length);
 
     if (infoFiltered.length !== matRequested.length) {
       this.setState({

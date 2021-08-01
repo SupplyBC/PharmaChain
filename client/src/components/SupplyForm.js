@@ -835,6 +835,7 @@ class RequestMaterials extends Component {
     const queryFilter = query.filter(item => {
       return item.materialName.includes(material)
     });
+    
     const result = queryFilter.map((item, index) => {
 
       let supplier = item.supplier;
@@ -848,10 +849,12 @@ class RequestMaterials extends Component {
       let stability = item.materialStability;
       let stabilityPeriod = item.materialStabilityPeriod;
       let toHide;
-      this.state.isTriggered ? toHide = "" : toHide = "hide"
-
+      this.state.isTriggered ? toHide = "" : toHide = "hide"  
+      // let classified;
+      // supplier === this.props.account[0]? classified = "" : classified = "hide"
 
       return (
+      
         <div key={index}>
 
           <ul className="query-result-list" key={index}>
@@ -942,50 +945,50 @@ class RequestMaterials extends Component {
           required="required"
         >
            
-          <option id="100" value="amoxicillin">
-          AMOXICILLIN
+           <option id="100" value="amoxicillin">
+            AMOXICILLIN
           </option>
           <option id="101" value="flucloxacillin">
-          FLUCLOXACILLIN
+            FLUCLOXACILLIN
           </option>
           <option id="201" value="ampicillin">
-          AMPICILLIN
+            AMPICILLIN
           </option>
           <option id="202" value="piperacillin">
-          PIPERACILLIN
+            PIPERACILLIN
           </option>
           <option id="102" value="valsartan">
-          VALSARTAN
+            VALSARTAN
           </option>
           <option id="103" value="hydrocholorothiazide">
-          HYDROCHLOROTHIAZIDE
+            HYDROCHLOROTHIAZIDE
           </option>
           <option id="104" value="diclofenac">
-          DICLOFENAC
+            DICLOFENAC
           </option>
           <option id="105" value="metronidazole">
-          METRONIDAZOLE
+            METRONIDAZOLE
           </option>
           <option id="107" value="polyvinylpyrrolidone">
-          {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
+            {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
           </option>
           <option id="108" value="crospovidone">
-          {`${'crospovidone'.toUpperCase()}`}
+            {`${'crospovidone'.toUpperCase()}`}
           </option>
           <option id="109" value="microcrystalline_cellulose_ph101">
-          {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
+            {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
           </option>
           <option id="110" value="magnesium_stearate">
-          {`${'magnesium stearate'.toUpperCase()}`}
+            {`${'magnesium stearate'.toUpperCase()}`}
           </option>
           <option id="111" value="maize_starch">
-          {`${'Maize starch'.toUpperCase()}`}
+            {`${'Maize starch'.toUpperCase()}`}
           </option>
           <option id="113" value="colloidal_silicon_dioxide">
-          {`${'colloidal silicon dioxide'.toUpperCase()}`}
+            {`${'colloidal silicon dioxide'.toUpperCase()}`}
           </option>
           <option id="114" value="asparatam">
-          {`${'asparatam'.toUpperCase()}`}
+            {`${'asparatam'.toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -1007,6 +1010,12 @@ class RequestMaterials extends Component {
           </option>
           <option id="7" value="plastic">
             PLASTIC
+          </option>
+          <option id="115" value="aluminum">
+            ALUMINUM
+          </option>
+          <option id="116" value="PVC">
+          POLYVINYL CHOLRIDE (PVC)
           </option>
           <option id="8" value="glass">
             GLASS
@@ -1222,49 +1231,49 @@ class CreateMaterial extends Component {
         <select name="material-name" onChange={this.OnChange} ref={this.matRef}>
         
         <option id="100" value="amoxicillin">
-          AMOXICILLIN
+            AMOXICILLIN
           </option>
           <option id="101" value="flucloxacillin">
-          FLUCLOXACILLIN
+            FLUCLOXACILLIN
           </option>
           <option id="201" value="ampicillin">
-          AMPICILLIN
+            AMPICILLIN
           </option>
           <option id="202" value="piperacillin">
-          PIPERACILLIN
+            PIPERACILLIN
           </option>
           <option id="102" value="valsartan">
-          VALSARTAN
+            VALSARTAN
           </option>
           <option id="103" value="hydrocholorothiazide">
-          HYDROCHLOROTHIAZIDE
+            HYDROCHLOROTHIAZIDE
           </option>
           <option id="104" value="diclofenac">
-          DICLOFENAC
+            DICLOFENAC
           </option>
           <option id="105" value="metronidazole">
-          METRONIDAZOLE
+            METRONIDAZOLE
           </option>
           <option id="107" value="polyvinylpyrrolidone">
-          {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
+            {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
           </option>
           <option id="108" value="crospovidone">
-          {`${'crospovidone'.toUpperCase()}`}
+            {`${'crospovidone'.toUpperCase()}`}
           </option>
           <option id="109" value="microcrystalline_cellulose_ph101">
-          {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
+            {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
           </option>
           <option id="110" value="magnesium_stearate">
-          {`${'magnesium stearate'.toUpperCase()}`}
+            {`${'magnesium stearate'.toUpperCase()}`}
           </option>
           <option id="111" value="maize_starch">
-          {`${'Maize starch'.toUpperCase()}`}
+            {`${'Maize starch'.toUpperCase()}`}
           </option>
           <option id="113" value="colloidal_silicon_dioxide">
-          {`${'colloidal silicon dioxide'.toUpperCase()}`}
+            {`${'colloidal silicon dioxide'.toUpperCase()}`}
           </option>
           <option id="114" value="asparatam">
-          {`${'asparatam'.toUpperCase()}`}
+            {`${'asparatam'.toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -1286,6 +1295,12 @@ class CreateMaterial extends Component {
           </option>
           <option id="7" value="plastic">
             PLASTIC
+          </option>
+          <option id="115" value="aluminum">
+            ALUMINUM
+          </option>
+          <option id="116" value="PVC">
+          POLYVINYL CHOLRIDE (PVC)
           </option>
           <option id="8" value="glass">
             GLASS
