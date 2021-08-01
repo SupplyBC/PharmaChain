@@ -793,7 +793,7 @@ class SetActualCosts extends Component {
 
       this.setState({ matRequested, matInfo, productInfo, productSpecs })
 
-
+      
       if (matInfo.every((val, index) => val === productSpecs[index])) {
 
         const materialCosts = infoFiltered.map(mat => {
@@ -923,7 +923,7 @@ class SetActualCosts extends Component {
 
 
 
-      } else {
+        } else {
         this.setState({
           msg: "ERROR CODE 2101: An Unexpected error occured. Make sure you entered a valid product Id and try again.",
           error: true

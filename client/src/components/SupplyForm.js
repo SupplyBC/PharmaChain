@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { BrowserRouter, Route, NavLink } from "react-router-dom";
 
 class ReviewRequests extends Component {
-  state={msg: ''}
+  state={msg: '' , isVisible: false}
   componentDidMount = async () => {
     let requests = await this.props.pcContract.methods.getMyRequests().call();
     this.setState({requests});
@@ -12,10 +12,7 @@ class ReviewRequests extends Component {
       this.setState({msg: 'No REQUESTS FOUND FOR THIS ADDRESS!'})
     } else {
       let requestsInfo = requests.map( (request,index) => {
-        let reqCost = parseInt(request.amount,10).toLocaleString("en-US", {
-          style: "currency",
-          currency: "USD",
-        });
+        let amount = request.amount;
         let supplier = request.toParti;
         let matId = request.materialID;
         let trackNo = request.requestId;
@@ -28,25 +25,27 @@ class ReviewRequests extends Component {
             <td>{trackNo}</td>
             <td>{matId}</td>
             <td>{supplier}</td>
-            <td>{reqCost}</td>
+            <td>{amount} KG</td>
             <td>{timestamp}</td>
           </tr>
         );
     
       });   
   
-      this.setState({requestsInfo});
+      this.setState({requestsInfo , isVisible: true});
 
     }
     
   }
 
   render() {
+    let vis;
+    this.state.isVisible? vis="show": vis="hide";
     return (
      <div className=" newform-container product-data-container"  >
        <h4>Review Your Requests</h4>
        <div className="notify-text"> {this.state.msg}</div>
-              <table className="cost-data" >
+              <table className={`${vis} cost-data`} >
                 <thead>
                   <tr>
                     <th>TRACKING NO</th>
