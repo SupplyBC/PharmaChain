@@ -1528,7 +1528,7 @@ select {
     display: flex;
     text-align: left;
     justify-content: center;
-    align-items: center;
+    /* align-items: center; */
     gap: 5px;
   }
 
