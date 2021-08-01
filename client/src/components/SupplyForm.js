@@ -1,6 +1,70 @@
 import React, { Component } from "react";
 import { BrowserRouter, Route, NavLink } from "react-router-dom";
 
+class ReviewRequests extends Component {
+  state={msg: ''}
+  componentDidMount = async () => {
+    let requests = await this.props.pcContract.methods.getMyRequests().call();
+    this.setState({requests});
+    console.log(requests);
+
+    if (requests.length === 0) {
+      this.setState({msg: 'No REQUESTS FOUND FOR THIS ADDRESS!'})
+    } else {
+      let requestsInfo = requests.map( (request,index) => {
+        let reqCost = parseInt(request.amount,10).toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        });
+        let supplier = request.toParti;
+        let matId = request.materialID;
+        let trackNo = request.requestId;
+        let time = new Date(request.issueTime*1000).toString();
+        const dateArr = time.split(" ", 5);
+        const timestamp = dateArr.join(" ");
+  
+        return (
+          <tr key={index}>
+            <td>{trackNo}</td>
+            <td>{matId}</td>
+            <td>{supplier}</td>
+            <td>{reqCost}</td>
+            <td>{timestamp}</td>
+          </tr>
+        );
+    
+      });   
+  
+      this.setState({requestsInfo});
+
+    }
+    
+  }
+
+  render() {
+    return (
+     <div className=" newform-container product-data-container"  >
+       <h4>Review Your Requests</h4>
+       <div className="notify-text"> {this.state.msg}</div>
+              <table className="cost-data" >
+                <thead>
+                  <tr>
+                    <th>TRACKING NO</th>
+                    <th>MATERIAL ID</th>
+                    <th>SUPPLIER</th>
+                    <th>COST</th>
+                    <th>TIMESTAMP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {this.state.requestsInfo}
+                </tbody>
+              </table>
+              </div>
+    );
+  }
+}
+
 class CostSheetReview extends Component {
 
   state = { material: '', product: '', isVisible: false }
@@ -1301,7 +1365,7 @@ class CreateMaterial extends Component {
           </option>
           <option id="116" value="PVC">
           POLYVINYL CHOLRIDE (PVC)
-          </option>
+          </option> 
           <option id="8" value="glass">
             GLASS
           </option>
@@ -2234,6 +2298,11 @@ class SupplyForm extends Component {
                    REQUEST MATERIAL
                 </NavLink>
               </li>
+              <li className="link-item">
+                <NavLink to="/supply/reviewRequests">
+                   MY REQUESTS
+                </NavLink>
+              </li>
               <label >
                 <strong> SUPPLIER </strong>
               </label>
@@ -2294,6 +2363,19 @@ class SupplyForm extends Component {
               exact
               render={(props) => (
                 <RequestMaterials
+                  {...props}
+                  Web3={this.props.Web3}
+                  account={this.props.account}
+                  pcContract={this.props.pcContract}
+                  pctContract={this.props.pctContract}
+                />
+              )}
+            />
+             <Route
+              path="/supply/reviewRequests"
+              exact
+              render={(props) => (
+                <ReviewRequests
                   {...props}
                   Web3={this.props.Web3}
                   account={this.props.account}
