@@ -317,7 +317,8 @@ class ReviewActCostSheet extends Component {
     const isTrust = await this.props.pcContract.methods.isTrusted(this.props.account[0]).call();
     this.setState({ isTrust });
 
-    const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
+    const products  =  await this.props.pcContract.methods.getProductSpecs(this.state.id).call();
+    // const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
     const isOwner = products.map(item => {
       if (item.manufacturer === this.props.account[0]) {
         return true;
@@ -423,7 +424,7 @@ class ReviewActCostSheet extends Component {
       return true;
     });
 
-    const requests = await this.props.pcContract.methods.getMyRequests().call();
+    const requests = await this.props.pcContract.methods.getProductRequests(this.state.id).call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
@@ -740,7 +741,9 @@ class SetActualCosts extends Component {
   OnSubmit = async (e) => {
     e.preventDefault();
 
-    const requests = await this.props.pcContract.methods.getMyRequests().call();
+    const requests = await this.props.pcContract.methods.getProductRequests(this.state.product).call();
+    console.log(requests);
+    // const requests = await this.props.pcContract.methods.getMyRequests().call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
@@ -764,7 +767,7 @@ class SetActualCosts extends Component {
 
     if (infoFiltered.length !== matRequested.length) {
       this.setState({
-        msg: " ERROR CODE 1101: An Unexpected error occured. Make sure you requested all required materials and try again",
+        msg: " ERROR CODE 1101: An Unexpected error occured. Make sure you requested all required materials for this product and try again",
         error: true
       })
       setTimeout(() => {
@@ -777,12 +780,12 @@ class SetActualCosts extends Component {
         return matName;
       })
 
-      const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
-      const productInfo = products.map(spec => {
-        let id = spec.productName;
-        this.setState({ id })
-        return id;
-      })
+      // const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
+      // const productInfo = products.map(spec => {
+      //   let id = spec.productName;
+      //   this.setState({ id })
+      //   return id;
+      // })
 
       const productSpecsInfo = await this.props.pcContract.methods.getProductSpecs(this.state.product).call();
       const productSpecs = productSpecsInfo.map(spec => {
@@ -791,9 +794,10 @@ class SetActualCosts extends Component {
         return name;
       })
 
-      this.setState({ matRequested, matInfo, productInfo, productSpecs })
+      this.setState({ matRequested, matInfo, productSpecs })
 
-      
+      console.log(matInfo)
+      console.log(productSpecs);
       if (matInfo.every((val, index) => val === productSpecs[index])) {
 
         const materialCosts = infoFiltered.map(mat => {
@@ -2279,7 +2283,7 @@ class CalculatePriceVariance extends Component {
     console.log(materialActualAmount);
     this.setState({materialActualAmount})
 
-    const requests = await this.props.pcContract.methods.getMyRequests().call();
+    const requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
@@ -2537,7 +2541,7 @@ class CalculateQuantityVariance extends Component {
     console.log(materialActualAmount);
     this.setState({materialActualAmount})
 
-    const requests = await this.props.pcContract.methods.getMyRequests().call();
+    const requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
@@ -2616,21 +2620,29 @@ class CalculateQuantityVariance extends Component {
         );
     this.setState({totalVariance,totalVarianceStr})
 
+
     if (
-      this.state.totalVariance === 0 ||
-      isNaN(this.state.totalVariance) 
-    ) {
-      // this.setState({
-      //   msg: "No Financial Data Found for the Given Product ID!".toUpperCase(),
-      // });
-      this.setState({ tableVisibility: true });
-    } else {
-      this.setState({msg: '', tableVisibility: true });
+      this.state.totalVariance === 0 || isNaN(this.state.totalVariance)  ) {
+      this.setState({
+        // msg: "No Financial Data Found for the Given Product ID!".toUpperCase(),
+        tableVisibility: true
+      })
+      console.log(actQty)
+
+      if (parseInt(this.state.actQty,10) === 0) {
+        this.setState({
+          msg: "No Financial Data Found for the Given Product ID!".toUpperCase(),
+          tableVisibility: false
+        });
+        setTimeout(() => {
+          this.setState({ msg: " " });
+        }, 3000);
+        
+    } 
     }
 
-    setTimeout(() => {
-      this.setState({ msg: " " });
-    }, 3000);
+  
+    
   };
 
   onChange = async (e) => {

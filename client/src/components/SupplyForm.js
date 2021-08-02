@@ -2,194 +2,206 @@ import React, { Component } from "react";
 import { BrowserRouter, Route, NavLink } from "react-router-dom";
 
 class ReviewRequests extends Component {
-  state={msg: '' , isVisible: false}
+  state = { msg: "", isVisible: false };
   componentDidMount = async () => {
-    let requests = await this.props.pcContract.methods.getMyRequests().call();
-    this.setState({requests});
+    let requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
+    this.setState({ requests });
     console.log(requests);
-
     if (requests.length === 0) {
-      this.setState({msg: 'No REQUESTS FOUND FOR THIS ADDRESS!'})
+      this.setState({ msg: "NO REQUESTS FOUND FOR THIS ADDRESS!" });
     } else {
-      let requestsInfo = requests.map( (request,index) => {
+      let requestsInfo = requests.map((request, index) => {
         let amount = request.amount;
         let supplier = request.toParti;
         let matId = request.materialID;
+        let product = request.productID;
         let trackNo = request.requestId;
-        let time = new Date(request.issueTime*1000).toString();
-        const dateArr = time.split(" ", 5);
-        const timestamp = dateArr.join(" ");
-  
+        // let time = new Date(request.issueTime * 1000).toString();
+        // const dateArr = time.split(" ", 5);
+        // const timestamp = dateArr.join(" ");
+
         return (
           <tr key={index}>
             <td>{trackNo}</td>
             <td>{matId}</td>
-            <td>{supplier}</td>
+            <td style={{width: '50%'}}>{supplier}</td>
             <td>{amount} KG</td>
-            <td>{timestamp}</td>
+            <td>{product}</td>
           </tr>
         );
-    
-      });   
-  
-      this.setState({requestsInfo , isVisible: true});
+      });
 
+      this.setState({ requestsInfo, isVisible: true });
     }
-    
-  }
+  };
 
   render() {
     let vis;
-    this.state.isVisible? vis="show": vis="hide";
+    this.state.isVisible ? (vis = "show") : (vis = "hide");
     return (
-     <div className=" newform-container product-data-container"  >
-       <h4>Review Your Requests</h4>
-       <div className="notify-text"> {this.state.msg}</div>
-              <table className={`${vis} cost-data`} >
-                <thead>
-                  <tr>
-                    <th>TRACKING NO</th>
-                    <th>MATERIAL ID</th>
-                    <th>SUPPLIER</th>
-                    <th>COST</th>
-                    <th>TIMESTAMP</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {this.state.requestsInfo}
-                </tbody>
-              </table>
-              </div>
+      <div className=" newform-container product-data-container">
+        <h4>Review Your Requests</h4>
+        <div className="msg"> <em> {this.state.msg} </em></div>
+        <table className={`${vis} cost-data`}>
+          <thead>
+            <tr>
+              <th>TRACKING NO</th>
+              <th>MATERIAL ID</th>
+              <th>SUPPLIER</th>
+              <th>AMOUNT</th>
+              <th>FOR PRODUCT</th>
+            </tr>
+          </thead>
+          <tbody>{this.state.requestsInfo}</tbody>
+        </table>
+      </div>
     );
   }
 }
 
 class CostSheetReview extends Component {
-
-  state = { material: '', product: '', isVisible: false }
+  state = { material: "", product: "", isVisible: false };
   constructor(props) {
     super(props);
     this.onSubmit = this.onSubmit.bind(this);
-
   }
 
   componentDidMount = async () => {
-    const isTrust = await this.props.pcContract.methods.checkIfTrusted(this.props.supplier, this.props.account[0]).call();
+    const isTrust = await this.props.pcContract.methods
+      .checkIfTrusted(this.props.supplier, this.props.account[0])
+      .call();
     this.setState({ isTrust });
     if (this.state.isTrust === true) {
-
     } else {
       this.setState({
-        msg: 'YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!',
-      })
+        msg: "YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!",
+      });
     }
-  }
+  };
 
   toggleCostSheetReview = async () => {
-    this.setState({ isVisible: !this.state.isVisible })
-  }
+    this.setState({ isVisible: !this.state.isVisible });
+  };
 
   onSubmit = async (e) => {
     e.preventDefault();
-    const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
+    const products = await this.props.pcContract.methods
+      .getProductsByManu(this.props.account[0])
+      .call();
 
     if (products.length === 0) {
-      this.setState({ msg: 'NO PRODUCT COST SHEET DATA AVAILABLE!' });
+      this.setState({ msg: "NO PRODUCT COST SHEET DATA AVAILABLE!" });
     }
-    const product = products.map(item => {
-      return item.productName;
-    })
-    
-    console.log(typeof(product));
-    if (typeof(product) === "undefined" ||  typeof(product[product.length-1]) === 'undefined' ) {
-      this.setState({ msg: 'NO PRODUCT COST SHEET DATA AVAILABLE!' });
+   
+
+    if (
+      this.props.product === undefined
+    ) {
+      this.setState({ msg: "NO PRODUCT COST SHEET DATA AVAILABLE!" });
     } else {
-      const productString = product[product.length-1].toString();
-      this.setState({productString})
-      const isOwner = product.map(item => {
-  
+      // const productString = this.props.product;
+      // console.log(productString);
+      // this.setState({ productString });
+
+      const productFilter = products.filter( pro => {
+        return pro.productName === this.props.product;
+      })
+
+      const isOwner = productFilter.map((item) => {
         if (item.manufacturer === this.props.account[0]) {
-          this.setState({strBoolIsOwner: 'true', msg: ''})
+          this.setState({ strBoolIsOwner: "true", msg: "" });
         } else {
-          this.setState({strBoolIsOwner: 'false', msg: ''})
+          this.setState({ strBoolIsOwner: "false", msg: "" });
         }
         return true;
-      })
-  
+      });
+
+     
+
       
       const strBoolIsOwner = isOwner.toString();
-      this.setState({ strBoolIsOwner,tableVisibility: false })
-      const productStdCost = await this.props.pcContract.methods.getStdCostPlan(this.state.productString).call();
+      this.setState({ strBoolIsOwner, tableVisibility: false });
+      const productStdCost = await this.props.pcContract.methods
+        .getStdCostPlan(this.props.product)
+        .call();
       // const productActQty = await this.props.pcContract.methods.getActualMaterialQty(productString).call();
-      const productSpecs = await this.props.pcContract.methods.getProductSpecs(this.state.productString).call();
-      const specsCriteria = productSpecs.map(mat=> {
+      const productSpecs = await this.props.pcContract.methods
+        .getProductSpecs(this.props.product)
+        .call();
+      const specsCriteria = productSpecs.map((mat) => {
         let matCostInfo;
-        let matAmountMg = parseFloat(mat.materialAmount,10);
-        let matAmountKg = matAmountMg/1000000;
-        if(mat.materialName === this.props.materialName) {
+        let matAmountMg = parseFloat(mat.materialAmount, 10);
+        let matAmountKg = matAmountMg / 1000000;
+        if (mat.materialName === this.props.materialName) {
           matCostInfo = this.props.matUnitCost;
-          this.setState({newRawMatCost: matCostInfo*matAmountKg})
-          return matCostInfo*matAmountKg;
-          
+          this.setState({ newRawMatCost: matCostInfo * matAmountKg });
+          return matCostInfo * matAmountKg;
         } else {
-          matCostInfo =  parseFloat(mat.materialUnitCost,10);
-          return matCostInfo*matAmountKg;
+          matCostInfo = parseFloat(mat.materialUnitCost, 10);
+          return matCostInfo * matAmountKg;
         }
-      })
-      const newMaterialCost = specsCriteria.reduce( (a,b) => a+b,0);
-  
-      this.setState({newMaterialCost});
-  
-      const proSpecsAll = await this.props.pcContract.methods.getProductSpecs(this.state.productString).call();
-      const proSpecsSingle = proSpecsAll.map( (spec,index) => {
+      });
+      const newMaterialCost = specsCriteria.reduce((a, b) => a + b, 0);
+
+      this.setState({ newMaterialCost });
+
+      const proSpecsAll = await this.props.pcContract.methods
+        .getProductSpecs(this.props.product)
+        .call();
+      const proSpecsSingle = proSpecsAll.map((spec, index) => {
         const matName = spec.materialName;
         const matAmountMg = spec.materialAmount;
         let matCost;
-        const matAmountKg = matAmountMg/1000000;
-    
-        if(matName === this.props.materialName) {
-          matCost = this.props.matUnitCost*matAmountKg;
+        const matAmountKg = matAmountMg / 1000000;
+
+        if (matName === this.props.materialName) {
+          matCost = this.props.matUnitCost * matAmountKg;
           const matCostStr = matCost.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
           });
-          this.setState({matNewCost: matCost,matCostStr})
+          this.setState({ matNewCost: matCost, matCostStr });
           console.log(matCost);
-          
         } else {
-          matCost =  parseFloat(spec.materialUnitCost,10)*matAmountKg;
-         
+          matCost = parseFloat(spec.materialUnitCost, 10) * matAmountKg;
+
           const matCostStr = matCost.toLocaleString("en-US", {
             style: "currency",
             currency: "USD",
           });
-          this.setState({matOldCost: matCost,matCostStr})
-  
+          this.setState({ matOldCost: matCost, matCostStr });
         }
-  
+
         return (
           <tr key={index}>
-          <td>{matName}</td>
-          <td>{this.state.matCostStr}</td>
-        </tr>
+            <td>{matName}</td>
+            <td>{this.state.matCostStr}</td>
+          </tr>
         );
-      })
-  
-      this.setState({proSpecsSingle})
-   
-  
-      const proStdCosts = productStdCost.map(item => {
-         let matStdCostValue = this.state.newMaterialCost;
-         let pkgStdCostValue = parseFloat(productStdCost.packagingMaterialCost, 10);
-         let laborStdCostValue = parseFloat(productStdCost.directLaborCost, 10);
-         let totalDirectCostValue = matStdCostValue + pkgStdCostValue + laborStdCostValue
-         let mrkStdCostValue = totalDirectCostValue * 15/100;
-         let rsrchStdCostValue = totalDirectCostValue * 3/100;
-         let totalIndirectCostValue = totalDirectCostValue * 20/100;
-         let fundManuCostValue = totalDirectCostValue * 30/100;
-         let totalStdCostValue = totalDirectCostValue + totalIndirectCostValue + mrkStdCostValue + rsrchStdCostValue + fundManuCostValue;
-  
-  
+      });
+
+      this.setState({ proSpecsSingle });
+
+      const proStdCosts = productStdCost.map((item) => {
+        let matStdCostValue = this.state.newMaterialCost;
+        let pkgStdCostValue = parseFloat(
+          productStdCost.packagingMaterialCost,
+          10
+        );
+        let laborStdCostValue = parseFloat(productStdCost.directLaborCost, 10);
+        let totalDirectCostValue =
+          matStdCostValue + pkgStdCostValue + laborStdCostValue;
+        let mrkStdCostValue = (totalDirectCostValue * 15) / 100;
+        let rsrchStdCostValue = (totalDirectCostValue * 3) / 100;
+        let totalIndirectCostValue = (totalDirectCostValue * 20) / 100;
+        let fundManuCostValue = (totalDirectCostValue * 30) / 100;
+        let totalStdCostValue =
+          totalDirectCostValue +
+          totalIndirectCostValue +
+          mrkStdCostValue +
+          rsrchStdCostValue +
+          fundManuCostValue;
+
         let matStdCost = matStdCostValue.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
@@ -214,22 +226,22 @@ class CostSheetReview extends Component {
           style: "currency",
           currency: "USD",
         });
-  
+
         let totalDirectCost = totalDirectCostValue.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
         });
-  
+
         let totalIndirectCost = totalIndirectCostValue.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
         });
-  
+
         let fundManuCost = fundManuCostValue.toLocaleString("en-US", {
           style: "currency",
           currency: "USD",
         });
-  
+
         this.setState({
           productStdCost,
           matStdCost,
@@ -250,191 +262,204 @@ class CostSheetReview extends Component {
           totalIndirectCostValue,
           totalDirectCostValue,
           fundManuCostValue,
-       
         });
         return true;
       });
-      this.setState({proStdCosts})
+      this.setState({ proStdCosts });
     }
-   
+  };
 
-  
-  }
-
-  
- 
   render() {
-
     let classified, visible;
-    this.state.isVisible ? visible = "show" : visible = "hide";
+    this.state.isVisible ? (visible = "show") : (visible = "hide");
     // this.state.isTrust ? classified = "show" : classified = "hide";
     let isToggled;
-    this.props.toggled ? isToggled = "" : isToggled = "hide";
+    this.props.toggled ? (isToggled = "") : (isToggled = "hide");
 
-    if (this.state.isTrust || this.state.strBoolIsOwner === 'true') {
-      classified = "show"
+    if (this.state.isTrust || this.state.strBoolIsOwner === "true") {
+      classified = "show";
     } else {
-      classified = "hide"
-    };
+      classified = "hide";
+    }
 
     return (
       <div className="newform-container">
-        <form onSubmit={this.onSubmit} >
-          <button onClick={this.toggleCostSheetReview} className={` ${isToggled} financial-detail-btn`}>{this.state.isVisible ? 'Hide Review' : 'Review Product Cost Sheet'}</button>
+        <form onSubmit={this.onSubmit}>
+          <button
+            onClick={this.toggleCostSheetReview}
+            className={` ${isToggled} financial-detail-btn`}
+          >
+            {this.state.isVisible ? "Hide Review" : "Review Product Cost Sheet"}
+          </button>
         </form>
         <div className={`${visible}`}>
           <div className={`costsClashContainer cost-sheet-review `}>
-            <div className="alert-text" style={{ marginLeft: '-20px' }}>{this.state.msg}</div>
-            <div className={`${classified} std-cost-container`}  >
-        <table className={`${isToggled} cost-data`} >
-          <thead>
-            <tr>
-              <th>CRITERIA</th>
-              <th>COST</th>
-            </tr>
-          </thead>
-          <tbody>
-          <tr style={{borderBottom: '1px solid #999'}}>
-            <th colSpan='2'>Raw Material Details</th> 
-            </tr>
-          {this.state.proSpecsSingle}
-            <tr style={{borderTop: '1px solid #999'}}>
-              <td> Raw Materials Total </td>
-              <td>{this.state.matStdCost}</td>
-            </tr>
-            <tr>
-              <td> Packaging Materials </td>
-              <td>{this.state.pkgStdCost}</td>
-            </tr>
-            <tr>
-              <td> Direct Labor </td>
-              <td>{this.state.laborStdCost}</td>
-            </tr>
-            <tr
-              style={{
-                borderTop: "1px solid",
-                borderBottom: "1px solid",
-              }}
-            >
-              <th>TOTAL DIRECT COST</th>
-              <td>{this.state.totalDirectCost}</td>
-            </tr>
+            <div className="alert-text" style={{ marginLeft: "-20px" }}>
+              {this.state.msg}
+            </div>
+            <div className={`${classified} std-cost-container`}>
+              <table className={`${isToggled} cost-data`}>
+                <thead>
+                  <tr>
+                    <th>CRITERIA</th>
+                    <th>COST</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: "1px solid #999" }}>
+                    <th colSpan="2">Raw Material Details</th>
+                  </tr>
+                  {this.state.proSpecsSingle}
+                  <tr style={{ borderTop: "1px solid #999" }}>
+                    <td> Raw Materials Total </td>
+                    <td>{this.state.matStdCost}</td>
+                  </tr>
+                  <tr>
+                    <td> Packaging Materials </td>
+                    <td>{this.state.pkgStdCost}</td>
+                  </tr>
+                  <tr>
+                    <td> Direct Labor </td>
+                    <td>{this.state.laborStdCost}</td>
+                  </tr>
+                  <tr
+                    style={{
+                      borderTop: "1px solid",
+                      borderBottom: "1px solid",
+                    }}
+                  >
+                    <th>TOTAL DIRECT COST</th>
+                    <td>{this.state.totalDirectCost}</td>
+                  </tr>
 
-            <tr className={`${classified}`}>
-              <td> Indirect Manufacturing Costs (20%) </td>
-              <td>{this.state.totalIndirectCost}</td>
-            </tr>
-            <tr className={`${classified}`}>
-              <td> Managerial and Funding Costs (30%) </td>
-              <td>{this.state.fundManuCost}</td>
-            </tr>
-            {/* <tr className={`${classified}`}>
+                  <tr className={`${classified}`}>
+                    <td> Indirect Manufacturing Costs (20%) </td>
+                    <td>{this.state.totalIndirectCost}</td>
+                  </tr>
+                  <tr className={`${classified}`}>
+                    <td> Managerial and Funding Costs (30%) </td>
+                    <td>{this.state.fundManuCost}</td>
+                  </tr>
+                  {/* <tr className={`${classified}`}>
               <td> Value Added Tax (14%) </td>
               <td>{(totDirValue * 14 / 100).toLocaleString("en-US", {
                 style: "currency",
                 currency: "USD",
               })}</td>
             </tr> */}
-            <tr className={`${classified}`} >
-              <td> Marketing (15%) </td>
-              <td>{this.state.mrkStdCost}</td>
-            </tr>
-            <tr className={`${classified}`}>
-              <td> Research (3%)</td>
-              <td>{this.state.rsrchStdCost}</td>
-            </tr>
-          </tbody>
+                  <tr className={`${classified}`}>
+                    <td> Marketing (15%) </td>
+                    <td>{this.state.mrkStdCost}</td>
+                  </tr>
+                  <tr className={`${classified}`}>
+                    <td> Research (3%)</td>
+                    <td>{this.state.rsrchStdCost}</td>
+                  </tr>
+                </tbody>
 
-          <tfoot className={`${classified}`}>
-            <tr>
-              <th> TOTAL </th>
-              <td>{this.state.totalStdCost}</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-            
-            
+                <tfoot className={`${classified}`}>
+                  <tr>
+                    <th> TOTAL </th>
+                    <td>{this.state.totalStdCost}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
-
         </div>
-        
       </div>
     );
   }
 }
 
 class MaterialCostData extends Component {
-  state = { material: '', isVisible: false }
+  state = { material: "", isVisible: false };
   constructor(props) {
     super(props);
     this.toggleFinancialDetails = this.toggleFinancialDetail.bind(this);
   }
 
   componentDidMount = async () => {
-    const isTrust = await this.props.pcContract.methods.checkIfTrusted(this.props.supplier, this.props.account[0]).call();
+    const isTrust = await this.props.pcContract.methods
+      .checkIfTrusted(this.props.supplier, this.props.account[0])
+      .call();
     this.setState({ isTrust });
     const query = await this.props.pcContract.methods.getMaterials().call();
 
-    const isAddrOwner = query.map(item => {
+    const isAddrOwner = query.map((item) => {
       let isOwner;
       if (item.supplier === this.props.account[0]) {
         isOwner = true;
-        this.setState({isOwner});
+        this.setState({ isOwner });
       } else {
         isOwner = false;
-        this.setState({isOwner});
+        this.setState({ isOwner });
       }
       return true;
-    })
+    });
 
-    console.log(this.state.isOwner)
-    this.setState({ isAddrOwner})
+    console.log(this.state.isOwner);
+    this.setState({ isAddrOwner });
 
     if (this.state.isTrust === true) {
     } else {
       this.setState({
-        msg: 'YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!',
-      })
+        msg: "YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!",
+      });
     }
 
     if (this.state.isOwner === true) {
       this.setState({
-        msg: '',
-      })
+        msg: "",
+      });
     } else if (this.state.isTrust === true) {
-     
     } else {
       this.setState({
-        msg: 'YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!',
-      })
+        msg: "YOU ARE NOT AUTHORIZED TO REVIEW THIS DATA!",
+      });
     }
-  
-  }
+  };
 
-  
   toggleFinancialDetail = async () => {
-    this.setState({ isVisible: !this.state.isVisible })
-  }
-
-
+    this.setState({ isVisible: !this.state.isVisible });
+  };
 
   onSubmit = async (e) => {
     e.preventDefault();
-    const matCosts = await this.props.pcContract.methods.getMaterialCostPlan(this.props.materialId).call();
+    const matCosts = await this.props.pcContract.methods
+      .getMaterialCostPlan(this.props.materialId)
+      .call();
     const cost = matCosts.map(() => {
       const matMaterialCostValue = parseFloat(matCosts.directMaterialCost, 10);
       const matPkgCostValue = parseFloat(matCosts.packagingMaterialCost, 10);
       const matLaborCostValue = parseFloat(matCosts.directLaborCost, 10);
       const matShippingCostValue = parseFloat(matCosts.shippingCost, 10);
       const matTotalDirectCostValue = parseFloat(matCosts.totalDirectCost, 10);
-      const matTotalIndirectCostValue = matTotalDirectCostValue*12.5/100;
-      const matMaterialCost = matMaterialCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const matPkgCost = matPkgCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const matLaborCost = matLaborCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const matShippingCost = matShippingCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const matTotalDirectCost = matTotalDirectCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-      const matTotalIndirectCost = matTotalIndirectCostValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      const matTotalIndirectCostValue = (matTotalDirectCostValue * 12.5) / 100;
+      const matMaterialCost = matMaterialCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+      const matPkgCost = matPkgCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+      const matLaborCost = matLaborCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+      const matShippingCost = matShippingCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+      const matTotalDirectCost = matTotalDirectCostValue.toLocaleString(
+        "en-US",
+        { style: "currency", currency: "USD" }
+      );
+      const matTotalIndirectCost = matTotalIndirectCostValue.toLocaleString(
+        "en-US",
+        { style: "currency", currency: "USD" }
+      );
 
       this.setState({
         matMaterialCostValue,
@@ -448,11 +473,10 @@ class MaterialCostData extends Component {
         matLaborCost,
         matShippingCost,
         matTotalDirectCost,
-        matTotalIndirectCost
-      })
+        matTotalIndirectCost,
+      });
 
       return true;
-
     });
 
     if (this.state.matTotalDirectCostValue === 0) {
@@ -460,30 +484,38 @@ class MaterialCostData extends Component {
         msg: "No Financial Data Found for the Given Material ID!".toUpperCase(),
       });
     }
-    this.setState({ cost })
-
-  }
+    this.setState({ cost });
+  };
 
   render() {
     let classified, visible;
-    this.state.isVisible ? visible = "show" : visible = "hide";
+    this.state.isVisible ? (visible = "show") : (visible = "hide");
     if (this.state.isTrust || this.state.isOwner) {
-      classified = "show"
+      classified = "show";
     } else {
-      classified = "hide"
+      classified = "hide";
     }
     let isToggled;
-    this.props.toggled ? isToggled = "" : isToggled = "hide";
+    this.props.toggled ? (isToggled = "") : (isToggled = "hide");
     return (
       <div className="newform-container">
-        <form onSubmit={this.onSubmit} >
-          <button onClick={this.toggleFinancialDetail} className={` ${isToggled} financial-detail-btn`}>{this.state.isVisible ? 'Hide Financial Data' : 'View Financial Data'}</button>
+        <form onSubmit={this.onSubmit}>
+          <button
+            onClick={this.toggleFinancialDetail}
+            className={` ${isToggled} financial-detail-btn`}
+          >
+            {this.state.isVisible
+              ? "Hide Financial Data"
+              : "View Financial Data"}
+          </button>
         </form>
         <div className={`${visible}`}>
           <div className={`costsClashContainer `}>
-            <div className="alert-text" style={{ marginLeft: '-20px' }}>{this.state.msg}</div>
-            <div className={`${classified} std-cost-container`}  >
-              <table className={`${isToggled} cost-data`} >
+            <div className="alert-text" style={{ marginLeft: "-20px" }}>
+              {this.state.msg}
+            </div>
+            <div className={`${classified} std-cost-container`}>
+              <table className={`${isToggled} cost-data`}>
                 <thead>
                   <tr>
                     <th>CRITERIA</th>
@@ -516,22 +548,18 @@ class MaterialCostData extends Component {
                     <td>TOTAL DIRECT COST</td>
                     <td>{this.state.matTotalDirectCost}</td>
                   </tr>
-
                 </tbody>
               </table>
             </div>
           </div>
-
         </div>
-
       </div>
     );
   }
 }
 
 class RevokeAccess extends Component {
-
-  state = { participant: '' }
+  state = { participant: "" };
 
   constructor(props) {
     super(props);
@@ -540,43 +568,49 @@ class RevokeAccess extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const parti = this.state.participant;
-    const addr = await this.props.pcContract.methods.checkIfTrusted(this.props.account[0], parti).call();
-    this.setState({ addr })
+    const addr = await this.props.pcContract.methods
+      .checkIfTrusted(this.props.account[0], parti)
+      .call();
+    this.setState({ addr });
     if (this.state.addr === true) {
-      await this.props.pcContract.methods.removeFromTrusted(parti).send({
-        from: this.props.account[0]
-      }).once("receipt", (receipt) => {
-        this.setState({ textStatus: true, msg: "Access was revoked successfully!".toUpperCase() });
-        setTimeout(() => {
-          this.setState({ msg: " " });
-        }, 3000);
-      });
-
+      await this.props.pcContract.methods
+        .removeFromTrusted(parti)
+        .send({
+          from: this.props.account[0],
+        })
+        .once("receipt", (receipt) => {
+          this.setState({
+            textStatus: true,
+            msg: "Access was revoked successfully!".toUpperCase(),
+          });
+          setTimeout(() => {
+            this.setState({ msg: " " });
+          }, 3000);
+        });
     } else {
-      this.setState({ textStatus: false, msg: "Access already revoked from this address!".toUpperCase() });
+      this.setState({
+        textStatus: false,
+        msg: "Access already revoked from this address!".toUpperCase(),
+      });
       setTimeout(() => {
         this.setState({ msg: " " });
       }, 3000);
     }
-
-
-  }
+  };
 
   onChange = async (e) => {
     this.setState({
       participant: this.participantRef.current.value,
-    })
-  }
+    });
+  };
   render() {
     let placeholder;
-    this.state.textStatus ? placeholder = 'good' : placeholder = 'alert'
+    this.state.textStatus ? (placeholder = "good") : (placeholder = "alert");
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
-
         <h4>REVOKE ACCESS</h4>
         <label> Enter Participant Address </label>
 
@@ -600,7 +634,10 @@ class RevokeAccess extends Component {
           style={{ marginTop: "20px" }}
           className={` product-data-container`}
         >
-          <div style={{ margin: "10px 0px" }} className={`query-result ${placeholder}-text`}>
+          <div
+            style={{ margin: "10px 0px" }}
+            className={`query-result ${placeholder}-text`}
+          >
             {this.state.msg}
           </div>
         </div>
@@ -610,7 +647,7 @@ class RevokeAccess extends Component {
 }
 
 class ManagePermissions extends Component {
-  state = { participant: '' }
+  state = { participant: "" };
 
   constructor(props) {
     super(props);
@@ -619,44 +656,50 @@ class ManagePermissions extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const parti = this.state.participant;
-    const addr = await this.props.pcContract.methods.checkIfTrusted(this.props.account[0], parti).call();
-    this.setState({ addr })
+    const addr = await this.props.pcContract.methods
+      .checkIfTrusted(this.props.account[0], parti)
+      .call();
+    this.setState({ addr });
     if (this.state.addr === true) {
-
-      this.setState({ textStatus: false, msg: "Access already granted for this address!".toUpperCase() });
+      this.setState({
+        textStatus: false,
+        msg: "Access already granted for this address!".toUpperCase(),
+      });
       setTimeout(() => {
         this.setState({ msg: " " });
-      }, 3000)
+      }, 3000);
     } else {
-      await this.props.pcContract.methods.addToTrusted(parti).send({
-        from: this.props.account[0]
-      }).once("receipt", (receipt) => {
-        this.setState({ textStatus: true, msg: "Access was granted successfully!".toUpperCase() });
-        setTimeout(() => {
-          this.setState({ msg: " " });
-        }, 3000);
-      });
+      await this.props.pcContract.methods
+        .addToTrusted(parti)
+        .send({
+          from: this.props.account[0],
+        })
+        .once("receipt", (receipt) => {
+          this.setState({
+            textStatus: true,
+            msg: "Access was granted successfully!".toUpperCase(),
+          });
+          setTimeout(() => {
+            this.setState({ msg: " " });
+          }, 3000);
+        });
     }
-
-
-  }
+  };
 
   onChange = async (e) => {
     this.setState({
       participant: this.participantRef.current.value,
-    })
-  }
+    });
+  };
   render() {
     let placeholder;
-    this.state.textStatus ? placeholder = 'good' : placeholder = 'alert'
+    this.state.textStatus ? (placeholder = "good") : (placeholder = "alert");
     return (
       <div>
         <form onSubmit={this.onSubmit} className="newform-container">
-
           <h4>Manage Data Permissions</h4>
           <h4>GRANT ACCESS</h4>
           <label> Enter Participant Address </label>
@@ -681,7 +724,10 @@ class ManagePermissions extends Component {
             style={{ marginTop: "20px" }}
             className={` product-data-container`}
           >
-            <div style={{ margin: "10px 0px" }} className={`query-result ${placeholder}-text`}>
+            <div
+              style={{ margin: "10px 0px" }}
+              className={`query-result ${placeholder}-text`}
+            >
               {this.state.msg}
             </div>
           </div>
@@ -689,7 +735,8 @@ class ManagePermissions extends Component {
         <hr className="custom-hr-half" />
         <RevokeAccess
           account={this.props.account}
-          pcContract={this.props.pcContract} />
+          pcContract={this.props.pcContract}
+        />
       </div>
     );
   }
@@ -743,7 +790,6 @@ class QueryProductSpecs extends Component {
     }
     this.setState({ proName: "", specsRow });
 
-
     this.btnRef.current.removeAttribute("disabled");
   };
 
@@ -789,7 +835,6 @@ class QueryProductSpecs extends Component {
           style={{ marginTop: "20px" }}
           className={`${table} product-data-container`}
         >
-
           <table border="1">
             <thead>
               <tr>
@@ -812,22 +857,44 @@ class RequestMaterials extends Component {
   state = {
     materialName: "",
     supplier: "",
+    product: "",
     manufacturerBatched: "",
-    amount: '',
+    amount: "",
     form: "",
-    strength: '',
+    strength: "",
     resultCount: 0,
     msg: " ",
     amountToggled: false,
     batchToggled: false,
     modalIsOpen: false,
     setIsOpen: false,
+    alert: false
   };
 
+  componentDidMount = async () => {
+    const products = await this.props.pcContract.methods.getProductsByManu(this.props.account[0]).call();
+    if (products.length === 0) {
+      this.setState({ messg: 'NO AVAILABLE PRODUCTS' })
+    } else {
+      const productsList = products.map((pro, index) => {
+        const name = pro.productName;
+
+        return (
+          <option value={name} key={index} > {name} </option>
+        );
+
+      })
+      this.setState({ productsList })
+    }
+
+
+
+  }
   constructor(props) {
     super(props);
     this.materialRef = React.createRef();
     this.supplierRef = React.createRef();
+    this.productRef = React.createRef();
     this.amountRef = React.createRef();
     this.formRef = React.createRef();
     this.matStrRef = React.createRef();
@@ -839,35 +906,46 @@ class RequestMaterials extends Component {
     this.addBatchRequest = this.addBatchRequest.bind(this);
   }
 
-
   addBatchRequest = async (e) => {
     e.preventDefault();
-    this.setState({ batchToggled: true })
+    this.setState({ batchToggled: true });
     const amount = this.state.amount;
+    const product = this.state.product;
     const id = this.state.matId;
     const manu2 = this.state.manufacturerBatched;
     const info = await this.props.pcContract.methods.getMaterialById(id).call();
     const supplier = info.supplier;
     await this.props.pcContract.methods.createBatchRequest(
       manu2,
+      product,
       supplier,
       id,
       amount
-    )
-
-  }
+    );
+  };
 
   addRequest = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     const amount = this.state.amount;
+    const product = this.state.product;
     const id = this.state.matId;
     const info = await this.props.pcContract.methods.getMaterialById(id).call();
     const toAddr = info.supplier;
     const unitCost = info.unitCost;
-    const requestCost = unitCost*amount;
+    const requestCost = unitCost * amount;
     const requestCostStr = requestCost.toString();
-    
-    await this.props.pcContract.methods.createRequest(toAddr, id, amount,requestCostStr)
+
+    const proSpecs = await this.props.pcContract.methods.getProductSpecs(product).call();
+    const proRequests = await this.props.pcContract.methods.getProductRequests(product).call();
+
+    if(proRequests.length >= proSpecs.length) {
+      this.setState({msg: 'YOUR REQUESTED ALL REQUIRED MATERIALS FOR THIS PRODUCT!' , alert:true})
+      setTimeout(() => {
+        this.setState({ msg: " " });
+      }, 3000);
+    } else {
+      await this.props.pcContract.methods
+      .createRequest(toAddr, product, id, amount, requestCostStr)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Request was sent successfully!" });
@@ -875,68 +953,102 @@ class RequestMaterials extends Component {
           this.setState({ msg: " " });
         }, 3000);
       });
-    const request = await this.props.pcContract.methods.getMyRequests().call();
+    const request = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
     const requestNo = request[request.length - 1].requestId;
     this.setState({ requestInfo: "Your Tracking Number: " + requestNo });
     setTimeout(() => {
       this.setState({ requestInfo: " " });
     }, 20000);
 
-  
-  }
+    }
+   
+
+  };
 
   triggerSupplierMenu = () => {
     this.setState({
-      isTriggered: !this.state.isTriggered
-    })
-
-  }
+      isTriggered: !this.state.isTriggered,
+    });
+  };
   onSubmit = async (e) => {
     e.preventDefault();
+    const product = this.state.product;
     const material = this.state.materialName;
     const query = await this.props.pcContract.methods.getMaterials().call();
-    const queryFilter = query.filter(item => {
-      return item.materialName.includes(material)
+    const queryFilter = query.filter((item) => {
+      return item.materialName.includes(material);
     });
-    
-    const result = queryFilter.map((item, index) => {
 
+    const result = queryFilter.map((item, index) => {
       let supplier = item.supplier;
       let id = item.materialID;
       let name = item.materialName;
       let costValue = parseFloat(item.unitCost, 10);
-      let cost = costValue.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+      let cost = costValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
       let form = item.materialForm;
       let availableAmount = item.createdAmount;
       let conditions = item.storageConditions;
       let stability = item.materialStability;
       let stabilityPeriod = item.materialStabilityPeriod;
       let toHide;
-      this.state.isTriggered ? toHide = "" : toHide = "hide"  
+      this.state.isTriggered ? (toHide = "") : (toHide = "hide");
       // let classified;
       // supplier === this.props.account[0]? classified = "" : classified = "hide"
 
       return (
-      
         <div key={index}>
-
           <ul className="query-result-list" key={index}>
             <div className="supplier-summary-container">
-              <li > <strong>SUPPLIER </strong> <span className="lead">{supplier}</span></li>
-              <span className="show-details-container">
-
-              </span>
+              <li>
+                
+                <strong>SUPPLIER </strong>{" "}
+                <span className="lead">{supplier}</span>
+              </li>
+              <span className="show-details-container"></span>
             </div>
             <div className={`${toHide}`}>
-              <li><strong><em>---- MATERIAL INFORMATION ----</em></strong></li>
-              <li> <strong>ID </strong> {id}</li>
-              <li> <strong>NAME </strong> {name}</li>
-              <li> <strong>FORM </strong> {form}</li>
-              <li> <strong>UNIT COST </strong> {cost}</li>
-              <li> <strong>STABILITY </strong> {stability ? "STABLE" : "NOT STABLE"}</li>
-              <li> <strong>STABILITY PERIOD </strong> {stabilityPeriod} years</li>
-              <li> <strong>STORAGE CONDITIONS</strong> {conditions === '' ? 'N/A' : conditions}</li>
-              <li> <strong>IN STOCK </strong> {availableAmount} Kg</li>
+              <li>
+                <strong>
+                  <em>---- MATERIAL INFORMATION ----</em>
+                </strong>
+              </li>
+              <li>
+                
+                <strong>ID </strong> {id}
+              </li>
+              <li>
+                
+                <strong>NAME </strong> {name}
+              </li>
+              <li>
+                
+                <strong>FORM </strong> {form}
+              </li>
+              <li>
+               
+                <strong>UNIT COST </strong> {cost}
+              </li>
+              <li>
+                
+                <strong>STABILITY </strong>{" "}
+                {stability ? "STABLE" : "NOT STABLE"}
+              </li>
+              <li>
+                
+                <strong>STABILITY PERIOD </strong> {stabilityPeriod} years
+              </li>
+              <li>
+               
+                <strong>STORAGE CONDITIONS</strong>{" "}
+                {conditions === "" ? "N/A" : conditions}
+              </li>
+              <li>
+                
+                <strong>IN STOCK </strong> {availableAmount} Kg
+              </li>
             </div>
           </ul>
           <MaterialCostData
@@ -945,48 +1057,50 @@ class RequestMaterials extends Component {
             materialId={id}
             account={this.props.account}
             pcContract={this.props.pcContract}
-
           />
           <CostSheetReview
             toggled={this.state.isTriggered}
             supplier={supplier}
             materialId={id}
-            materialName = {name}
+            materialName={name}
+            product={product}
             account={this.props.account}
             pcContract={this.props.pcContract}
             matUnitCost={costValue}
-            matId = {id}
-
+            matId={id}
           />
           <hr className="custom-hr-full"></hr>
-
         </div>
       );
-    })
-    this.setState({ resultCount: queryFilter.length, result, amountToggled: true });
+    });
+    this.setState({
+      resultCount: queryFilter.length,
+      result,
+      amountToggled: true,
+    });
 
     if (this.state.resultCount === 0) {
-      this.setState({ emptyToggle: true })
+      this.setState({ emptyToggle: true });
     } else {
-      this.setState({ emptyToggle: false })
+      this.setState({ emptyToggle: false });
     }
-
   };
 
   onChange = (e) => {
     this.setState({
       materialName: this.materialRef.current.value,
       matId: this.idRef.current.value,
+      product: this.productRef.current.value,
       // supplier: this.supplierRef.current.value,
       amount: this.amountRef.current.value,
-      manufacturerBatched: this.manufacturerBatchedRef.current.value
+      manufacturerBatched: this.manufacturerBatchedRef.current.value,
       // form: this.formRef.current.value,
       // strength: this.matStrRef.current.value,
     });
   };
 
   render() {
-    let toggled, toggled2, toggled3
+    let toggled, toggled2, toggled3, textState;
     let acc = this.props.account;
     let cont1 = this.props.pcContract;
     let cont2 = this.props.pctContract;
@@ -994,12 +1108,23 @@ class RequestMaterials extends Component {
     if (!acc || !cont1 || !cont2 || !web) {
       return <div> Loading..... </div>;
     }
-    this.state.amountToggled ? toggled = "show" : toggled = "hide"
-    this.state.batchToggled ? toggled2 = "show" : toggled2 = "hide"
-    this.state.emptyToggle ? toggled3 = "hide" : toggled3 = "show"
+    this.state.amountToggled ? (toggled = "show") : (toggled = "hide");
+    this.state.batchToggled ? (toggled2 = "show") : (toggled2 = "hide");
+    this.state.emptyToggle ? (toggled3 = "hide") : (toggled3 = "show");
+    this.state.alert? textState = 'alert' : textState = 'good';
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
-
+        <label>Requesting For Product: </label>
+        <select
+          name="product"
+          onChange={this.onChange}
+          ref={this.productRef}
+          required="required"
+        >
+          <option disabled> -- Select a Product -- </option>
+          <option disabled>{this.state.messg}</option>
+          {this.state.productsList}
+        </select>
         <label> Material Name: </label>
         <select
           name="material-name"
@@ -1007,8 +1132,7 @@ class RequestMaterials extends Component {
           ref={this.materialRef}
           required="required"
         >
-           
-           <option id="100" value="amoxicillin">
+          <option id="100" value="amoxicillin">
             AMOXICILLIN
           </option>
           <option id="101" value="flucloxacillin">
@@ -1033,25 +1157,25 @@ class RequestMaterials extends Component {
             METRONIDAZOLE
           </option>
           <option id="107" value="polyvinylpyrrolidone">
-            {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
+            {`${"Polyvinylpyrrolidone".toUpperCase()}`}
           </option>
           <option id="108" value="crospovidone">
-            {`${'crospovidone'.toUpperCase()}`}
+            {`${"crospovidone".toUpperCase()}`}
           </option>
           <option id="109" value="microcrystalline_cellulose_ph101">
-            {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
+            {`${"microcrystalline cellulose PH 101".toUpperCase()}`}
           </option>
           <option id="110" value="magnesium_stearate">
-            {`${'magnesium stearate'.toUpperCase()}`}
+            {`${"magnesium stearate".toUpperCase()}`}
           </option>
           <option id="111" value="maize_starch">
-            {`${'Maize starch'.toUpperCase()}`}
+            {`${"Maize starch".toUpperCase()}`}
           </option>
           <option id="113" value="colloidal_silicon_dioxide">
-            {`${'colloidal silicon dioxide'.toUpperCase()}`}
+            {`${"colloidal silicon dioxide".toUpperCase()}`}
           </option>
           <option id="114" value="asparatam">
-            {`${'asparatam'.toUpperCase()}`}
+            {`${"asparatam".toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -1078,7 +1202,7 @@ class RequestMaterials extends Component {
             ALUMINUM
           </option>
           <option id="116" value="PVC">
-          POLYVINYL CHOLRIDE (PVC)
+            POLYVINYL CHOLRIDE (PVC)
           </option>
           <option id="8" value="glass">
             GLASS
@@ -1087,7 +1211,7 @@ class RequestMaterials extends Component {
             WOOD
           </option>
           <option id="10" value="wheat-germ-oil">
-            WHEAT GERM OIl
+            WHEAT GERM OIL
           </option>
           <option id="11" value="paracetamol">
             PARACETAMOL
@@ -1112,9 +1236,7 @@ class RequestMaterials extends Component {
           </option>
         </select>
 
-        <div
-          className={`${toggled2} amount-pop-up`}>
-
+        <div className={`${toggled2} amount-pop-up`}>
           <label>Add Manufacturer Address:</label>
           <input
             type="text"
@@ -1122,20 +1244,16 @@ class RequestMaterials extends Component {
             value={this.state.manufacturerBatched}
             onChange={this.onChange}
             placeholder="e.g.0x8a57428748D955C919F1928C1F21aF0dC1f4fC9d"
-
           />
         </div>
 
-        <div
-          className={`${toggled} amount-pop-up`}>
-
+        <div className={`${toggled} amount-pop-up`}>
           <label>Material ID:</label>
           <input
             type="text"
             onChange={this.onChange}
             ref={this.idRef}
             placeholder="e.g. mat101"
-
           />
           <label>Requested Amount (Kg): </label>
           <input
@@ -1157,36 +1275,38 @@ class RequestMaterials extends Component {
             value="SEARCH"
           />
 
-          <button
-            className={`${toggled} btn`}
-            onClick={this.addRequest}>
-            REQUEST</button>
-
-          <button
-            className={`${toggled} btn`}
-            onClick={this.addBatchRequest}>
-            CREATE BATCH REQUEST
+          <button className={`${toggled} btn`} onClick={this.addRequest}>
+            REQUEST
           </button>
 
-
+          <button className={`${toggled} btn`} onClick={this.addBatchRequest}>
+            CREATE BATCH REQUEST
+          </button>
         </div>
-
 
         <div
           style={{ marginTop: "20px" }}
-          className="notify-data-container notify-text"
+          className={` notify-data-container ${textState}-text`}
         >
-          <div><strong>{this.state.msg}</strong> </div>
-          <div style={{ fontSize: '16px' }}><strong>{this.state.requestInfo}</strong></div>
+          <div>
+            <strong>{this.state.msg}</strong>{" "}
+          </div>
+          <div style={{ fontSize: "16px" }}>
+            <strong>{this.state.requestInfo}</strong>
+          </div>
         </div>
         <div className={`${toggled} results-counter`}>
-          <p style={{ textAlign: 'left' }}> Found <strong>{this.state.resultCount} </strong> results. </p>
+          <p style={{ textAlign: "left" }}>
+            {" "}
+            Found <strong>{this.state.resultCount} </strong> results.{" "}
+          </p>
         </div>
         <div className={`${toggled} query-result-container`}>
           <button
             onClick={this.triggerSupplierMenu}
-            className={`${toggled3} material-detail-btn`}>
-            {this.state.isTriggered ? 'COLLAPSE VIEW' : 'EXPAND VIEW'}
+            className={`${toggled3} material-detail-btn`}
+          >
+            {this.state.isTriggered ? "COLLAPSE VIEW" : "EXPAND VIEW"}
           </button>
           {this.state.result}
         </div>
@@ -1200,12 +1320,11 @@ class CreateMaterial extends Component {
     matId: "",
     matName: "",
     matForm: "",
-    matStr: '',
-    matAmount: '',
+    matStr: "",
+    matAmount: "",
     matConditions: "",
     matStability: false,
     matStabilityPeriod: "",
-
   };
   constructor(props) {
     super(props);
@@ -1230,18 +1349,30 @@ class CreateMaterial extends Component {
     const amount = this.state.matAmount;
     const condition = this.state.matConditions;
     const stability = this.state.matStability;
-    const stabilityPeriod = this.state.matStabilityPeriod
+    const stabilityPeriod = this.state.matStabilityPeriod;
 
-    const matCosts = await this.props.pcContract.methods.getMaterialCostPlan(id).call();
+    const matCosts = await this.props.pcContract.methods
+      .getMaterialCostPlan(id)
+      .call();
 
-    const matUnitCost = matCosts.map(cost => {
-      let totalCost =  matCosts.CostTOT;
-      this.setState({totalCost})
+    const matUnitCost = matCosts.map((cost) => {
+      let totalCost = matCosts.CostTOT;
+      this.setState({ totalCost });
       return true;
-    })
-    this.setState({matUnitCost})
+    });
+    this.setState({ matUnitCost });
     await this.props.pcContract.methods
-      .createMaterial(id, name, strength, form, amount, this.state.totalCost, condition, stability, stabilityPeriod)
+      .createMaterial(
+        id,
+        name,
+        strength,
+        form,
+        amount,
+        this.state.totalCost,
+        condition,
+        stability,
+        stabilityPeriod
+      )
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Materials Created Successfully!" });
@@ -1272,7 +1403,7 @@ class CreateMaterial extends Component {
       matAmount: this.amountRef.current.value,
       matConditions: this.matConditionsRef.current.value,
       matStability: this.matStabilityRef.current.value,
-      matStabilityPeriod: this.matStabilityPeriodRef.current.value
+      matStabilityPeriod: this.matStabilityPeriodRef.current.value,
     });
 
     console.log(this.state.matStability);
@@ -1288,12 +1419,10 @@ class CreateMaterial extends Component {
           ref={this.idRef}
           placeholder="e.g. mat101"
           required="required"
-
         />
         <label>Material Name:</label>
         <select name="material-name" onChange={this.OnChange} ref={this.matRef}>
-        
-        <option id="100" value="amoxicillin">
+          <option id="100" value="amoxicillin">
             AMOXICILLIN
           </option>
           <option id="101" value="flucloxacillin">
@@ -1318,25 +1447,25 @@ class CreateMaterial extends Component {
             METRONIDAZOLE
           </option>
           <option id="107" value="polyvinylpyrrolidone">
-            {`${'Polyvinylpyrrolidone'.toUpperCase()}`}
+            {`${"Polyvinylpyrrolidone".toUpperCase()}`}
           </option>
           <option id="108" value="crospovidone">
-            {`${'crospovidone'.toUpperCase()}`}
+            {`${"crospovidone".toUpperCase()}`}
           </option>
           <option id="109" value="microcrystalline_cellulose_ph101">
-            {`${'microcrystalline cellulose PH 101'.toUpperCase()}`}
+            {`${"microcrystalline cellulose PH 101".toUpperCase()}`}
           </option>
           <option id="110" value="magnesium_stearate">
-            {`${'magnesium stearate'.toUpperCase()}`}
+            {`${"magnesium stearate".toUpperCase()}`}
           </option>
           <option id="111" value="maize_starch">
-            {`${'Maize starch'.toUpperCase()}`}
+            {`${"Maize starch".toUpperCase()}`}
           </option>
           <option id="113" value="colloidal_silicon_dioxide">
-            {`${'colloidal silicon dioxide'.toUpperCase()}`}
+            {`${"colloidal silicon dioxide".toUpperCase()}`}
           </option>
           <option id="114" value="asparatam">
-            {`${'asparatam'.toUpperCase()}`}
+            {`${"asparatam".toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -1363,8 +1492,8 @@ class CreateMaterial extends Component {
             ALUMINUM
           </option>
           <option id="116" value="PVC">
-          POLYVINYL CHOLRIDE (PVC)
-          </option> 
+            POLYVINYL CHOLRIDE (PVC)
+          </option>
           <option id="8" value="glass">
             GLASS
           </option>
@@ -1432,19 +1561,25 @@ class CreateMaterial extends Component {
           required="required"
         />
 
-        <div className='checkbox-container'
-          style={{ display: 'flex', flexDirection: 'row', gap: '10px', margin: '10px 0px' }}>
+        <div
+          className="checkbox-container"
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            gap: "10px",
+            margin: "10px 0px",
+          }}
+        >
           <input
             type="checkbox"
             value="true"
             onChange={this.onChange}
             ref={this.matStabilityRef}
             required="required"
-            style={{ display: 'inline' }}
+            style={{ display: "inline" }}
             name="stability"
           />
           <label>Stable</label>
-
         </div>
 
         <label> Stability Period (years) </label>
@@ -1465,7 +1600,6 @@ class CreateMaterial extends Component {
           placeholder="e.g. Keep out of reach for children , store in a dry place."
         />
 
-
         <input type="submit" value="CREATE MATERIAL" className="btn" />
 
         <div style={{ marginTop: "20px" }} className="notify-text">
@@ -1479,11 +1613,11 @@ class CreateMaterial extends Component {
 class CreateCostPlan extends Component {
   state = {
     material: "",
-    materialMaterialCost: '',
-    materialPkgCost: '',
-    materialLaborCost: '',
-    materialShippingCost: '',
-    materialTotalIndirectCost: ''
+    materialMaterialCost: "",
+    materialPkgCost: "",
+    materialLaborCost: "",
+    materialShippingCost: "",
+    materialTotalIndirectCost: "",
   };
 
   constructor(props) {
@@ -1493,10 +1627,9 @@ class CreateCostPlan extends Component {
     this.materialMaterialCostRef = React.createRef();
     this.materialLaborCostRef = React.createRef();
     this.materialShippingCostRef = React.createRef();
-    this.materialTotalIndirectCostRef = React.createRef()
+    this.materialTotalIndirectCostRef = React.createRef();
     this.OnChange = this.onChange.bind(this);
     this.OnSubmit = this.OnSubmit.bind(this);
-
   }
 
   OnSubmit = async (e) => {
@@ -1507,9 +1640,16 @@ class CreateCostPlan extends Component {
     const matMaterialCost = this.state.materialMaterialCost;
     const matLaborCost = this.state.materialLaborCost;
     const matShippingCost = this.state.materialShippingCost;
-    const matTotalDirectCost = parseFloat(matMaterialCost,10) + parseFloat(matPkgCost,10) + parseFloat(matLaborCost,10);
-    const matTotalIndirectCost = parseFloat(matTotalDirectCost,10)*12.5/100;
-    const matTotalCost = matTotalDirectCost + matTotalIndirectCost + parseFloat(matShippingCost,10);
+    const matTotalDirectCost =
+      parseFloat(matMaterialCost, 10) +
+      parseFloat(matPkgCost, 10) +
+      parseFloat(matLaborCost, 10);
+    const matTotalIndirectCost =
+      (parseFloat(matTotalDirectCost, 10) * 12.5) / 100;
+    const matTotalCost =
+      matTotalDirectCost +
+      matTotalIndirectCost +
+      parseFloat(matShippingCost, 10);
     const matTotalDirectCostStr = matTotalDirectCost.toString();
     const matTotalCostStr = matTotalCost.toString();
     // const totalStandard =
@@ -1518,19 +1658,14 @@ class CreateCostPlan extends Component {
     // this.setState({ totalStdCost: totalStandard });
 
     await this.props.pcContract.methods
-      .setMaterialCostPlan(
-        mat,
-        [
+      .setMaterialCostPlan(mat, [
         matMaterialCost,
         matPkgCost,
         matLaborCost,
         matShippingCost,
         matTotalDirectCostStr,
-        matTotalCostStr
-       
-      ]
-
-      )
+        matTotalCostStr,
+      ])
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Material Cost Plan Was Set Successfully" });
@@ -1540,12 +1675,11 @@ class CreateCostPlan extends Component {
       });
 
     this.setState({
-
       materialMaterialCost: "",
       materialPkgCost: "",
       materialLaborCost: "",
       materialShippingCost: "",
-      materialTotalIndirectCost: ""
+      materialTotalIndirectCost: "",
     });
   };
 
@@ -1556,8 +1690,8 @@ class CreateCostPlan extends Component {
       materialMaterialCost: this.materialMaterialCostRef.current.value,
       materialShippingCost: this.materialShippingCostRef.current.value,
       materialLaborCost: this.materialLaborCostRef.current.value,
-      materialTotalIndirectCost: this.materialTotalIndirectCostRef.current.value
-
+      materialTotalIndirectCost:
+        this.materialTotalIndirectCostRef.current.value,
     });
   };
 
@@ -1581,8 +1715,7 @@ class CreateCostPlan extends Component {
           required="required"
         />
 
-
-        <h4> Set Material Cost Plan  </h4>
+        <h4> Set Material Cost Plan </h4>
 
         <label>Raw Material Cost: </label>
         <input
@@ -1603,7 +1736,6 @@ class CreateCostPlan extends Component {
           onChange={this.OnChange}
           required="required"
         />
-
 
         <label>Labor Cost: </label>
         <input
@@ -1649,7 +1781,7 @@ class CreateCostPlan extends Component {
   }
 }
 class ApproveRequest extends Component {
-  state = { msg: '', requestId: '' }
+  state = { msg: "", requestId: "" };
 
   constructor(props) {
     super(props);
@@ -1658,16 +1790,18 @@ class ApproveRequest extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = parseInt(this.state.requestId, 10);
     console.log(requestNo);
 
-    const reqCost = await this.props.pcContract.methods.getRequestCost(requestNo).call();
-    const reqCostInt = parseInt(reqCost,10)
+    const reqCost = await this.props.pcContract.methods
+      .getRequestCost(requestNo)
+      .call();
+    const reqCostInt = parseInt(reqCost, 10);
 
-    await this.props.pctContract.methods.approveRequest(requestNo,reqCostInt)
+    await this.props.pctContract.methods
+      .approveRequest(requestNo, reqCostInt)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Request was approved successfully!" });
@@ -1676,18 +1810,14 @@ class ApproveRequest extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '' })
-
-  }
+    this.setState({ requestId: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
-      requestId: this.requestIdRef.current.value
-    })
-
-
-  }
+      requestId: this.requestIdRef.current.value,
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -1716,7 +1846,7 @@ class ApproveRequest extends Component {
 }
 
 class SendShipment extends Component {
-  state = { msg: '', requestId: '' }
+  state = { msg: "", requestId: "" };
 
   constructor(props) {
     super(props);
@@ -1725,13 +1855,13 @@ class SendShipment extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
 
     //todo transact here
-    await this.props.pctContract.methods.sendShipment(requestNo)
+    await this.props.pctContract.methods
+      .sendShipment(requestNo)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipment status successfully!" });
@@ -1740,20 +1870,14 @@ class SendShipment extends Component {
         }, 3000);
       });
 
-
-
-    this.setState({ requestId: '' })
-
-
-  }
+    this.setState({ requestId: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
       requestId: this.requestIdRef.current.value,
-    })
-
-
-  }
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -1783,7 +1907,7 @@ class SendShipment extends Component {
 }
 
 class TransitGlobal extends Component {
-  state = { msg: '', requestId: '' }
+  state = { msg: "", requestId: "" };
 
   constructor(props) {
     super(props);
@@ -1792,14 +1916,13 @@ class TransitGlobal extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
     console.log(requestNo);
 
-
-    await this.props.pctContract.methods.globalTransitShipment(requestNo)
+    await this.props.pctContract.methods
+      .globalTransitShipment(requestNo)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipment status successfully!" });
@@ -1808,19 +1931,14 @@ class TransitGlobal extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '' })
-
-
-  }
+    this.setState({ requestId: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
-      requestId: this.requestIdRef.current.value
-    })
-
-
-  }
+      requestId: this.requestIdRef.current.value,
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -1849,7 +1967,7 @@ class TransitGlobal extends Component {
 }
 
 class TransitLocal extends Component {
-  state = { msg: '', requestId: '' }
+  state = { msg: "", requestId: "" };
 
   constructor(props) {
     super(props);
@@ -1858,16 +1976,15 @@ class TransitLocal extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
     console.log(requestNo);
 
-
     //todo transact here
 
-    await this.props.pctContract.methods.localTransitShipment(requestNo)
+    await this.props.pctContract.methods
+      .localTransitShipment(requestNo)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipment status successfully!" });
@@ -1876,20 +1993,14 @@ class TransitLocal extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '' })
-
-
-
-  }
+    this.setState({ requestId: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
-      requestId: this.requestIdRef.current.value
-    })
-
-
-  }
+      requestId: this.requestIdRef.current.value,
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -1918,7 +2029,7 @@ class TransitLocal extends Component {
 }
 
 class ReceiveShipment extends Component {
-  state = { msg: '', requestId: '' }
+  state = { msg: "", requestId: "" };
 
   constructor(props) {
     super(props);
@@ -1927,14 +2038,16 @@ class ReceiveShipment extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
-    const reqCost = await this.props.pcContract.methods.getRequestCost(requestNo).call();
-    const reqCostInt = parseInt(reqCost,10);
+    const reqCost = await this.props.pcContract.methods
+      .getRequestCost(requestNo)
+      .call();
+    const reqCostInt = parseInt(reqCost, 10);
 
-    await this.props.pctContract.methods.receiveShipment(requestNo,reqCostInt)
+    await this.props.pctContract.methods
+      .receiveShipment(requestNo, reqCostInt)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipment status successfully!" });
@@ -1943,17 +2056,14 @@ class ReceiveShipment extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '' })
-  }
+    this.setState({ requestId: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
-      requestId: this.requestIdRef.current.value
-    })
-
-
-  }
+      requestId: this.requestIdRef.current.value,
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -1982,7 +2092,7 @@ class ReceiveShipment extends Component {
 }
 
 class SetLocation extends Component {
-  state = { msg: '', requestId: '', latitude: '', longitude: '' }
+  state = { msg: "", requestId: "", latitude: "", longitude: "" };
 
   constructor(props) {
     super(props);
@@ -1993,14 +2103,14 @@ class SetLocation extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
     const lat = this.state.latitude;
     const long = this.state.longitude;
 
-    await this.props.pctContract.methods.setShipmentLocation(requestNo, lat, long)
+    await this.props.pctContract.methods
+      .setShipmentLocation(requestNo, lat, long)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipment location successfully!" });
@@ -2009,19 +2119,16 @@ class SetLocation extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '', latitude: '', longitude: '' })
-  }
+    this.setState({ requestId: "", latitude: "", longitude: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
       requestId: this.requestIdRef.current.value,
       latitude: this.latRef.current.value,
-      longitude: this.longRef.current.value
-    })
-
-
-  }
+      longitude: this.longRef.current.value,
+    });
+  };
   render() {
     return (
       <form onSubmit={this.onSubmit} className="newform-container">
@@ -2068,7 +2175,7 @@ class SetLocation extends Component {
 }
 
 class SetShippingMethod extends Component {
-  state = { msg: '', requestId: '', method: '' }
+  state = { msg: "", requestId: "", method: "" };
 
   constructor(props) {
     super(props);
@@ -2078,13 +2185,13 @@ class SetShippingMethod extends Component {
     this.onChange = this.onChange.bind(this);
   }
 
-
   onSubmit = async (e) => {
     e.preventDefault();
     const requestNo = this.state.requestId;
     const shipMethod = this.state.method;
 
-    await this.props.pctContract.methods.setShipmentMethod(requestNo, shipMethod)
+    await this.props.pctContract.methods
+      .setShipmentMethod(requestNo, shipMethod)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated shipping method successfully!" });
@@ -2093,16 +2200,15 @@ class SetShippingMethod extends Component {
         }, 3000);
       });
 
-
-    this.setState({ requestId: '', method: '' })
-  }
+    this.setState({ requestId: "", method: "" });
+  };
 
   onChange = async (e) => {
     this.setState({
       requestId: this.requestIdRef.current.value,
-      method: this.methodRef.current.value
+      method: this.methodRef.current.value,
     });
-  }
+  };
 
   render() {
     return (
@@ -2118,12 +2224,16 @@ class SetShippingMethod extends Component {
           required="required"
         />
         <label>Shipping Method</label>
-        <select ref={this.methodRef} onChange={this.onChange} >
-
-          <option id="1" value="airplane">AIRPLANE</option>
-          <option id="2" value="truck">TRUCK</option>
-          <option id="3" value="ship">SHIP</option>
-
+        <select ref={this.methodRef} onChange={this.onChange}>
+          <option id="1" value="airplane">
+            AIRPLANE
+          </option>
+          <option id="2" value="truck">
+            TRUCK
+          </option>
+          <option id="3" value="ship">
+            SHIP
+          </option>
         </select>
         <div>
           <input type="submit" className="btn" value="SET METHOD" />
@@ -2135,7 +2245,6 @@ class SetShippingMethod extends Component {
           {this.state.msg}
         </div>
       </form>
-
     );
   }
 }
@@ -2143,51 +2252,60 @@ class ManageSupply extends Component {
   render() {
     return (
       <div className="form-collection newform-container">
-        <p className="sub-head" style={{ textAlign: 'center' }}> <strong>SUPPLY PORTAL: </strong>MANAGE SUPPLY CHAIN ACTIVITES. </p>
+        <p className="sub-head" style={{ textAlign: "center" }}>
+          {" "}
+          <strong>SUPPLY PORTAL: </strong>MANAGE SUPPLY CHAIN ACTIVITES.{" "}
+        </p>
         <ApproveRequest
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <SetShippingMethod
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <SetLocation
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <SendShipment
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <TransitGlobal
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <TransitLocal
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
+          pctContract={this.props.pctContract}
+        />
         <hr className="custom-hr-half"></hr>
         <ReceiveShipment
           account={this.props.account}
           pcContract={this.props.pcContract}
-          pctContract={this.props.pctContract} />
-
+          pctContract={this.props.pctContract}
+        />
       </div>
     );
   }
 }
 
 class ManageIOT extends Component {
-  state = { request: '', temp: 0, humid: 0, msg: '' }
+  state = { request: "", temp: 0, humid: 0, msg: "" };
   constructor(props) {
-    super(props)
+    super(props);
     this.tempRef = React.createRef();
     this.humidRef = React.createRef();
     this.requestIdRef = React.createRef();
@@ -2200,8 +2318,9 @@ class ManageIOT extends Component {
     const temp = this.state.temp;
     const humid = this.state.humid;
     const request = parseInt(this.state.request, 10);
-    console.log(temp, humid)
-    await this.props.pctContract.methods.setShipmentTrackData(request, temp, humid)
+    console.log(temp, humid);
+    await this.props.pctContract.methods
+      .setShipmentTrackData(request, temp, humid)
       .send({ from: this.props.account[0] })
       .once("receipt", (receipt) => {
         this.setState({ msg: "Updated Temp and Humidity Data Successfully!" });
@@ -2209,21 +2328,23 @@ class ManageIOT extends Component {
           this.setState({ msg: " " });
         }, 3000);
       });
-
-  }
+  };
 
   onChange = async (e) => {
     this.setState({
       temp: this.tempRef.current.value,
       humid: this.humidRef.current.value,
-      request: this.requestIdRef.current.value
+      request: this.requestIdRef.current.value,
     });
-  }
+  };
 
   render() {
     return (
       <div className="newform-container">
-        <p className="sub-head" style={{ marginBottom: '20px' }}> <strong>IOT PORTAL</strong>: MANAGE IOT DATA. </p>
+        <p className="sub-head" style={{ marginBottom: "20px" }}>
+          {" "}
+          <strong>IOT PORTAL</strong>: MANAGE IOT DATA.{" "}
+        </p>
         <label> Tracking Number: </label>
         <input
           type="number"
@@ -2235,8 +2356,9 @@ class ManageIOT extends Component {
         />
         <hr className="custom-hr-half"></hr>
         <h4> Set Temperature </h4>
-        <label>  Temperature (°C):</label>
-        <input type="number"
+        <label> Temperature (°C):</label>
+        <input
+          type="number"
           value={this.state.temp}
           ref={this.tempRef}
           onChange={this.onChange}
@@ -2246,7 +2368,8 @@ class ManageIOT extends Component {
 
         <h4> Set Humidity </h4>
         <label> Humidity (%):</label>
-        <input type="number"
+        <input
+          type="number"
           value={this.state.humid}
           ref={this.humidRef}
           onChange={this.onChange}
@@ -2254,7 +2377,10 @@ class ManageIOT extends Component {
           required="required"
         />
         <div>
-          <button onClick={this.onClick} className="btn"> UPDATE DATA </button>
+          <button onClick={this.onClick} className="btn">
+            {" "}
+            UPDATE DATA{" "}
+          </button>
         </div>
         <div
           style={{ marginTop: "20px" }}
@@ -2262,18 +2388,15 @@ class ManageIOT extends Component {
         >
           {this.state.msg}
         </div>
-
-
       </div>
     );
   }
-
 }
 
 class SupplyForm extends Component {
   componentDidMount = () => {
-    document.title = 'Supply Management | Pharma Chain'
-  }
+    document.title = "Supply Management | Pharma Chain";
+  };
   render() {
     let acc = this.props.account;
     let cont1 = this.props.pcContract;
@@ -2290,44 +2413,39 @@ class SupplyForm extends Component {
                 <NavLink to="/supply/querySpecs"> QUERY PRODUCT SPECS</NavLink>
               </li>
               <li className="link-item">
-                <NavLink to="/supply/managePermissions"> MANAGE PERMISSIONS</NavLink>
-              </li>
-              <li className="link-item">
-                <NavLink to="/supply/requestMaterial">
-                   REQUEST MATERIAL
+                <NavLink to="/supply/managePermissions">
+                  {" "}
+                  MANAGE PERMISSIONS
                 </NavLink>
               </li>
               <li className="link-item">
-                <NavLink to="/supply/reviewRequests">
-                   MY REQUESTS
-                </NavLink>
+                <NavLink to="/supply/requestMaterial">REQUEST MATERIAL</NavLink>
               </li>
-              <label >
+              <li className="link-item">
+                <NavLink to="/supply/reviewRequests">MY REQUESTS</NavLink>
+              </li>
+              <label>
                 <strong> SUPPLIER </strong>
               </label>
               <li className="link-item">
                 <NavLink to="/supply/supplier/createCostPlan">
-                   CREATE COST PLAN
+                  CREATE COST PLAN
                 </NavLink>
               </li>
               <li className="link-item">
                 <NavLink to="/supply/supplier/createMaterial">
-                   CREATE MATERIAL
+                  CREATE MATERIAL
                 </NavLink>
               </li>
-             
+
               <label>
                 <strong> MISC. </strong>
               </label>
               <li className="link-item">
-                <NavLink to="/supply/supplyPortal">
-                   MANAGE SUPPLY
-                </NavLink>
+                <NavLink to="/supply/supplyPortal">MANAGE SUPPLY</NavLink>
               </li>
               <li className="link-item">
-                <NavLink to="/supply/iotPortal">
-                   MANAGE IOT
-                </NavLink>
+                <NavLink to="/supply/iotPortal">MANAGE IOT</NavLink>
               </li>
             </ul>
           </div>
@@ -2370,7 +2488,7 @@ class SupplyForm extends Component {
                 />
               )}
             />
-             <Route
+            <Route
               path="/supply/reviewRequests"
               exact
               render={(props) => (
