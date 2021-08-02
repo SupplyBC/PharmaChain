@@ -11,53 +11,6 @@ import PharmaChainTrackingContract from "./contracts/PharmaChainTracking.json";
 import { BrowserRouter, Route, NavLink } from "react-router-dom";
 import "./App.css";
 
-
-class ConfigureContracts2 extends Component {
-  state = { contractsConfigured: false };
-
-  componentDidMount = async () => {
-    try {
-      const bank = await this.props.pcContract.methods
-        .setAsBank(this.props.account[0])
-        .send({ from: this.props.account[0] });
-
-      
-      this.setState({ bank, contractsConfigured: true });
-      localStorage.setItem(
-        "contractConfigured2",
-        this.state.contractsConfigured
-      );
-      const persistStatus = localStorage.getItem("contractConfigured2");
-      this.setState({ contractsConfigured: persistStatus });
-      this.props.setData(this.state.contractsConfigured);
-    } catch (error) {
-      alert(
-        "Unexpected error occurred while trying to setup Dapp data, please refresh the page and try again."
-      );
-    }
-  };
-
-  render() {
-    return (
-      <div
-        style={{
-          color: "#f2f2f2",
-          backgroundColor: "#295263",
-          height: "100vh",
-          textAlign: "center",
-          margin: "0px auto",
-          padding: "10px",
-        }}
-      >
-        <div className="animated-config">FINISHING DAPP SETUP</div>
-        <p className="animated-config-subtext">
-          Confirm MetaMask's Pop-up Notification(s) to Continue.
-        </p>
-      </div>
-    );
-  }
-}
-
 class ConfigureContracts extends Component {
   state = { contractsConfigured: false };
 
@@ -71,10 +24,10 @@ class ConfigureContracts extends Component {
       // .setBank(this.props.account[])
       this.setState({ conf, contractsConfigured: true });
       localStorage.setItem(
-        "contractConfigured1",
+        "contractToken1",
         this.state.contractsConfigured
       );
-      const persistStatus = localStorage.getItem("contractConfigured1");
+      const persistStatus = localStorage.getItem("contractToken1");
       this.setState({ contractsConfigured: persistStatus });
       this.props.setData(this.state.contractsConfigured);
     } catch (error) {
@@ -104,6 +57,57 @@ class ConfigureContracts extends Component {
     );
   }
 }
+
+
+
+class ConfigureContracts2 extends Component {
+  state = { contractsConfigured: false };
+
+  componentDidMount = async () => {
+    try {
+      const bank = await this.props.pcContract.methods
+        .setAsBank(this.props.account[0])
+        .send({ from: this.props.account[0] });
+
+      
+      this.setState({ bank, contractsConfigured: true });
+      localStorage.setItem(
+        "contractToken2",
+        this.state.contractsConfigured
+      );
+      const persistStatus = localStorage.getItem("contractToken2");
+      this.setState({ contractsConfigured: persistStatus });
+      this.props.setData(this.state.contractsConfigured);
+    } catch (error) {
+      alert(
+        "Unexpected error occurred while trying to setup Dapp data, please refresh the page and try again."
+      );
+    }
+  };
+
+  
+
+  render() {
+    return (
+      <div
+        style={{
+          color: "#f2f2f2",
+          backgroundColor: "#295263",
+          height: "100vh",
+          textAlign: "center",
+          margin: "0px auto",
+          padding: "10px",
+        }}
+      >
+        <div className="animated-config">FINISHING DAPP SETUP</div>
+        <p className="animated-config-subtext">
+          Confirm MetaMask's Pop-up Notification(s) to Continue.
+        </p>
+      </div>
+    );
+  }
+}
+
 
 class Loader extends Component {
   render() {
@@ -172,20 +176,39 @@ class App extends Component {
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
       const deployedNetwork1 = PharmaChainContract.networks[networkId];
+      this.setState({oldData1: deployedNetwork1.address}) 
+      localStorage.setItem(
+        "oldDataCheck1",
+        this.state.oldData1
+      );
       const deployedNetwork2 = PharmaChainTrackingContract.networks[networkId];
+      this.setState({oldData2: deployedNetwork2.address}) 
+      localStorage.setItem(
+        "oldDataCheck2",
+        this.state.oldData2
+      );
       const pcInstance = new web3.eth.Contract(
         PharmaChainContract.abi,
         deployedNetwork1 && deployedNetwork1.address
       );
+     
       const pctInstance = new web3.eth.Contract(
         PharmaChainTrackingContract.abi,
         deployedNetwork2 && deployedNetwork2.address
       );
 
-      if (!deployedNetwork1 || !deployedNetwork2) {
-        localStorage.clear();
-      }
+      const cont1Addr = await pcInstance.methods.returnContractAddress().call();
+      console.log(cont1Addr, deployedNetwork1.address)
+      localStorage.setItem('cont1Old',cont1Addr );
+      const test = localStorage.getItem('cont1Old');
+      console.log(test);
+      // const check1 = localStorage.getItem("oldDataCheck1")
+      // const check2 = localStorage.getItem("oldDataCheck2")
+      //  console.log(check1, deployedNetwork1.address);
+      //  console.log(check2, deployedNetwork2.address);
 
+      
+     
       // Set web3, accounts, and contract to the state
 
       const balance = await pcInstance.methods.getBalance(accounts[0]).call();
@@ -199,6 +222,7 @@ class App extends Component {
       });
     } catch (error) {
       // Catch any errors for any of the above operations.
+      
       alert(
         `Failed to load Web3. Please check your web3 connection and try again!`
       );
@@ -219,7 +243,7 @@ class App extends Component {
     if (!this.state.web3) {
       return <Loader />;
     }
-    if (!localStorage.getItem("contractConfigured1")) {
+    if (!localStorage.getItem("contractToken1")) {
       return (
         <ConfigureContracts
           Web3={this.state.web3}
@@ -231,7 +255,7 @@ class App extends Component {
         />
       );
     }
-    if ( localStorage.getItem("contractConfigured1") && !localStorage.getItem("contractConfigured2")) {
+    if ( localStorage.getItem("contractToken1") && !localStorage.getItem("contractToken2")) {
       return (
         <ConfigureContracts2
           Web3={this.state.web3}
@@ -243,6 +267,7 @@ class App extends Component {
         />
       );
     }
+
     let toggle;
     this.state.isMenuToggled ? (toggle = "") : (toggle = "hide");
     return (

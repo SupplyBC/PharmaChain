@@ -45,6 +45,7 @@ contract PharmaChain {
     mapping (string => Material)            materialList; // materials by id
     mapping (address => Request[])          requests;   // participant and requests
     mapping (uint => Request)               requestList; // requests by id
+    mapping (string => Request[])           productRequests; // request for each product
     mapping (address => BatchRequest[])     batchRequests; //participant and batch requests
     mapping (uint => BatchRequest)          batchRequestsList; // request id
     mapping (string => Cost)                standardProductCosts;
@@ -107,6 +108,7 @@ contract PharmaChain {
         uint    requestId;
         address fromParti;
         address toParti;
+        string  productID;
         string  materialID;
         string  amount;
         uint    issueTime;
@@ -157,6 +159,11 @@ contract PharmaChain {
     //     require(participants[msg.sender][_participant] == true);
     //     _;
     // }
+
+    function returnContractAddress() public view returns (address) {
+        return address(this);
+    }
+    
 
     function addToTrusted(address _participant) public  {
         participants[msg.sender][_participant] = true;
@@ -392,7 +399,7 @@ contract PharmaChain {
         materials[msg.sender].push(mat);
         materialList[_id] = mat;
         materialArr.push(mat);
-        addToInventory(msg.sender, _id , _amount);
+        // addToInventory(msg.sender, _id , _amount);
         
     }
     
@@ -431,6 +438,7 @@ contract PharmaChain {
     function createRequest(
     
     address _to ,
+    string memory _productId,
     string memory _materialId,
     string memory _amount,
     string memory _requestCost
@@ -438,6 +446,7 @@ contract PharmaChain {
     public {
         trackNoCount += 1;
         Request memory req = Request({
+           productID: _productId,
            requestId: trackNoCount,
            fromParti: msg.sender,
            toParti: _to,
@@ -450,6 +459,7 @@ contract PharmaChain {
         requestCost[req.requestId] = _requestCost;
         requests[msg.sender].push(req);
         requestList[req.requestId] = req;
+        productRequests[_productId].push(req);
         emit requestStateUpdate(msg.sender, block.timestamp , 'REQUEST CREATED');
     }
     
@@ -484,10 +494,11 @@ contract PharmaChain {
         return requestCost[_id];
     }
     
-    function getMyRequests() public view returns (Request[] memory) {
+    function getMyRequests(address _parti) public view returns (Request[] memory) {
         
-        return requests[msg.sender];
+        return requests[_parti];
     }
+
     
     function getMyBatchRequests() public view returns (BatchRequest[] memory) {
         return batchRequests[msg.sender];
@@ -497,32 +508,37 @@ contract PharmaChain {
         return requestList[_id];
     }
     
-    function addToInventory(address _participant , string memory _item , string memory _amount) public {
-        InventoryItem memory itm = InventoryItem({
-            itemId: _item,
-            amount: _amount
-        });
+    function getProductRequests(string memory _product) public view returns (Request[] memory) {
         
-        inventory[_participant].push(itm);
-        inventoryList[_item] = itm;
+        return productRequests[_product];
     }
     
-    function updateInventory(address _participant , string memory _item , string memory _amount) public {
+    // function addToInventory(address _participant , string memory _item , string memory _amount) public {
+    //     InventoryItem memory itm = InventoryItem({
+    //         itemId: _item,
+    //         amount: _amount
+    //     });
         
-        if(strComp(_item, inventory[_participant][0].itemId) ) {
-            inventory[_participant][0].amount = _amount;
-            inventoryList[_item].amount = _amount;
+    //     inventory[_participant].push(itm);
+    //     inventoryList[_item] = itm;
+    // }
+    
+    // function updateInventory(address _participant , string memory _item , string memory _amount) public {
+        
+    //     if(strComp(_item, inventory[_participant][0].itemId) ) {
+    //         inventory[_participant][0].amount = _amount;
+    //         inventoryList[_item].amount = _amount;
             
-        }
-    }
+    //     }
+    // }
     
-    function getInventory(address _participant) public view returns (InventoryItem[] memory) {
-        return inventory[_participant];
-    }
+    // function getInventory(address _participant) public view returns (InventoryItem[] memory) {
+    //     return inventory[_participant];
+    // }
     
-    function getInventoryItemById(string memory _item) public view returns (InventoryItem memory) {
-        return inventoryList[_item];
-    }
+    // function getInventoryItemById(string memory _item) public view returns (InventoryItem memory) {
+    //     return inventoryList[_item];
+    // }
     
     // END OF SUPPLYING STUFF
     // BANKING STUFF GOES HERE

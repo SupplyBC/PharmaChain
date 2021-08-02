@@ -45,6 +45,10 @@ contract PharmaChainTracking {
     }
     
   
+  function returnContractAddress() public view returns (address) {
+        return address(this);
+    }
+    
     
     function setContract(address _contract) public {
         pcContract = _contract;
@@ -61,6 +65,7 @@ contract PharmaChainTracking {
     // 5- LOCAL TRANSMISSION SHIPS PACKAGE TO FINAL DESTINATION (MANUFACTURER)
     // TEMP AND HUMIDITY READINGS ARE SET DURING ALL PHASES OF SHIPMENT TRANSMISSION.
     
+
     //supplier
     function approveRequest(uint _requestId, uint _totalPayment) public {
         createLog(_requestId, 'REQUEST APPROVED', 'NORMAL' , 'YOUR REQUEST IS BEING PROCESSED.' );
