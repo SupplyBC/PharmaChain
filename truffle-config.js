@@ -12,11 +12,12 @@ module.exports = {
     },
 
     mobile_develop: {
-      host: "192.168.1.11",
+      host: "192.168.1.7",
       network_id: "*",
       port: 7545,
       gas: 6721975,
       gasPrice: 20000000000
+      
     },
   },
   compilers: {
