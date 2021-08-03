@@ -283,8 +283,8 @@ class AddMaterial extends Component {
           <option id="113" value="colloidal_silicon_dioxide">
             {`${'colloidal silicon dioxide'.toUpperCase()}`}
           </option>
-          <option id="114" value="asparatam">
-            {`${'asparatam'.toUpperCase()}`}
+          <option id="114" value="aspartame">
+            {`${'aspartame'.toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A

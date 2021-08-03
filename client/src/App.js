@@ -176,17 +176,7 @@ class App extends Component {
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
       const deployedNetwork1 = PharmaChainContract.networks[networkId];
-      this.setState({oldData1: deployedNetwork1.address}) 
-      localStorage.setItem(
-        "oldDataCheck1",
-        this.state.oldData1
-      );
       const deployedNetwork2 = PharmaChainTrackingContract.networks[networkId];
-      this.setState({oldData2: deployedNetwork2.address}) 
-      localStorage.setItem(
-        "oldDataCheck2",
-        this.state.oldData2
-      );
       const pcInstance = new web3.eth.Contract(
         PharmaChainContract.abi,
         deployedNetwork1 && deployedNetwork1.address
@@ -196,16 +186,6 @@ class App extends Component {
         PharmaChainTrackingContract.abi,
         deployedNetwork2 && deployedNetwork2.address
       );
-
-      const cont1Addr = await pcInstance.methods.returnContractAddress().call();
-      console.log(cont1Addr, deployedNetwork1.address)
-      localStorage.setItem('cont1Old',cont1Addr );
-      const test = localStorage.getItem('cont1Old');
-      console.log(test);
-      // const check1 = localStorage.getItem("oldDataCheck1")
-      // const check2 = localStorage.getItem("oldDataCheck2")
-      //  console.log(check1, deployedNetwork1.address);
-      //  console.log(check2, deployedNetwork2.address);
 
       
      

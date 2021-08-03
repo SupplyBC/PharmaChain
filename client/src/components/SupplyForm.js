@@ -1,6 +1,68 @@
 import React, { Component } from "react";
 import { BrowserRouter, Route, NavLink } from "react-router-dom";
 
+class ReviewMaterials extends Component {
+  state = { msg: "", isVisible: false };
+  componentDidMount = async () => {
+    let materials = await this.props.pcContract.methods.getMaterialsBySupplier(this.props.account[0]).call();
+    console.log(materials)
+    this.setState({ materials });
+    if (materials.length === 0) {
+      this.setState({ msg: "NO MATERIALS FOUND FOR THIS ADDRESS!" });
+    } else {
+      let materialsInfo = materials.map((material, index) => {
+        let name = material.materialName;
+        let stable = material.materialStability;
+        let matId = material.materialID;
+        let unitCost = parseFloat(material.unitCost,10).toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        });;
+        let manuDate = new Date(material.materialManuDate*1000).toString();
+      
+        // let time = new Date(request.issueTime * 1000).toString();
+        const dateArr = manuDate.split(" ", 5);
+        const timestamp = dateArr.join(" ");
+
+        return (
+          <tr key={index}>
+            <td>{matId}</td>
+            <td>{name}</td>
+            <td>{stable ? 'STABLE': 'UNSTABLE' } </td>
+            <td>{timestamp}</td>
+            <td> {unitCost} </td>
+          </tr>
+        );
+      });
+
+      this.setState({ materialsInfo, isVisible: true });
+    }
+  };
+
+  render() {
+    let vis;
+    this.state.isVisible ? (vis = "show") : (vis = "hide");
+    return (
+      <div className=" newform-container product-data-container">
+        <h4>Review Your Materials</h4>
+        <div className="msg"> <em> {this.state.msg} </em></div>
+        <table className={`${vis} material-table cost-data`}>
+          <thead>
+            <tr >
+              <th>MATERIAL ID</th>
+              <th>NAME</th>
+              <th>STABILITY</th>
+              <th>MANU DATE</th>
+              <th>UNIT COST</th>
+            </tr>
+          </thead>
+          <tbody>{this.state.materialsInfo}</tbody>
+        </table>
+      </div>
+    );
+  }
+}
+
 class ReviewRequests extends Component {
   state = { msg: "", isVisible: false };
   componentDidMount = async () => {
@@ -1174,8 +1236,8 @@ class RequestMaterials extends Component {
           <option id="113" value="colloidal_silicon_dioxide">
             {`${"colloidal silicon dioxide".toUpperCase()}`}
           </option>
-          <option id="114" value="asparatam">
-            {`${"asparatam".toUpperCase()}`}
+          <option id="114" value="aspartame">
+            {`${"Aspartame".toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -1464,8 +1526,8 @@ class CreateMaterial extends Component {
           <option id="113" value="colloidal_silicon_dioxide">
             {`${"colloidal silicon dioxide".toUpperCase()}`}
           </option>
-          <option id="114" value="asparatam">
-            {`${"asparatam".toUpperCase()}`}
+          <option id="114" value="aspartame">
+            {`${"aspartame".toUpperCase()}`}
           </option>
           <option id="11" value="vitamin-a">
             VITAMIN A
@@ -2437,6 +2499,9 @@ class SupplyForm extends Component {
                   CREATE MATERIAL
                 </NavLink>
               </li>
+              <li className="link-item">
+                <NavLink to="/supply/reviewMaterials">MY MATERIALS</NavLink>
+              </li>
 
               <label>
                 <strong> MISC. </strong>
@@ -2493,6 +2558,19 @@ class SupplyForm extends Component {
               exact
               render={(props) => (
                 <ReviewRequests
+                  {...props}
+                  Web3={this.props.Web3}
+                  account={this.props.account}
+                  pcContract={this.props.pcContract}
+                  pctContract={this.props.pctContract}
+                />
+              )}
+            />
+            <Route
+              path="/supply/reviewMaterials"
+              exact
+              render={(props) => (
+                <ReviewMaterials
                   {...props}
                   Web3={this.props.Web3}
                   account={this.props.account}
