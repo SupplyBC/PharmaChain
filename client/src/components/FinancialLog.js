@@ -1196,8 +1196,9 @@ class CalculateStaticVariance extends Component {
       let mrkCostValue = totalDirectCostValue * 15 / 100;
       let rsrchCostValue = totalDirectCostValue * 3 / 100;
       let totalIndirectCostValue = totalDirectCostValue * 20 / 100;
+      let fundManuCostValue = totalDirectCostValue * 30 / 100;
       // let totalStdCostValue = parseFloat(standard.CostTOT, 10);
-      let totalStdCostValue = totalDirectCostValue + mrkCostValue + rsrchCostValue + totalIndirectCostValue;
+      let totalStdCostValue = totalDirectCostValue + mrkCostValue + rsrchCostValue + totalIndirectCostValue + fundManuCostValue;
       // let totalActCostValue =
       //   matActCostValue +
       //   pkgActCostValue +
@@ -1241,6 +1242,11 @@ class CalculateStaticVariance extends Component {
         currency: "USD",
       });
 
+      let fundManuCost = fundManuCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
 
       this.setState({
         standard,
@@ -1252,6 +1258,7 @@ class CalculateStaticVariance extends Component {
         totalStdCost,
         totalDirectCost,
         totalIndirectCost,
+        fundManuCost,
         matCostValue,
         pkgCostValue,
         laborCostValue,
@@ -1259,7 +1266,8 @@ class CalculateStaticVariance extends Component {
         rsrchCostValue,
         totalStdCostValue,
         totalDirectCostValue,
-        totalIndirectCostValue
+        totalIndirectCostValue,
+        fundManuCostValue
       });
       return true;
     });
@@ -1277,8 +1285,9 @@ class CalculateStaticVariance extends Component {
       let mrkActCostValue = totalDirectActCostValue * 15 / 100;
       let rsrchActCostValue = totalDirectActCostValue * 3 / 100;
       let totalIndirectActCostValue = totalDirectActCostValue * 20 / 100;
+      let fundManuActCostValue = totalDirectActCostValue * 30 / 100;
       // let totalActCostValue = parseFloat(actual.CostTOT, 10);
-      let totalActCostValue = totalDirectActCostValue + mrkActCostValue + rsrchActCostValue + totalIndirectActCostValue
+      let totalActCostValue = totalDirectActCostValue + mrkActCostValue + rsrchActCostValue + totalIndirectActCostValue + fundManuActCostValue;
       // let totalActCostValue =
       //   matActCostValue +
       //   pkgActCostValue +
@@ -1322,6 +1331,10 @@ class CalculateStaticVariance extends Component {
         currency: "USD",
       });
 
+      let fundManuActCost = fundManuActCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
 
       this.setState({
         actual,
@@ -1333,6 +1346,7 @@ class CalculateStaticVariance extends Component {
         totalActCost,
         totalDirectActCost,
         totalIndirectActCost,
+        fundManuActCost,
         matActCostValue,
         pkgActCostValue,
         laborActCostValue,
@@ -1340,7 +1354,8 @@ class CalculateStaticVariance extends Component {
         rsrchActCostValue,
         totalActCostValue,
         totalDirectActCostValue,
-        totalIndirectActCostValue
+        totalIndirectActCostValue,
+        fundManuActCostValue,
       });
       return true;
     });
@@ -1502,6 +1517,20 @@ class CalculateStaticVariance extends Component {
                     <td>{this.state.totalIndirectActCost}</td>
                   </tr>
                   <tr>
+                    <td> MANAGERIAL AND FUNDING COSTS  </td>
+                    <td>{this.state.fundManuCost}</td>
+                    <td>
+                      {Math.abs(
+                        this.state.fundManuCostValue -
+                        this.state.fundManuActCostValue
+                      ).toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </td>
+                    <td>{this.state.fundManuActCost}</td>
+                  </tr>
+                  <tr>
                     <td> Marketing </td>
                     <td>{this.state.mrkCost}</td>
                     <td>
@@ -1578,13 +1607,15 @@ class CalculateFlexibleVariance extends Component {
       let pkgCostValue = parseFloat(standard.packagingMaterialCost, 10)*stdUnits;
       let laborCostValue = parseFloat(standard.directLaborCost, 10)*stdUnits;
       // let totalDirectCostValue = parseFloat(standard.totalDirectCost, 10)*stdUnits;
+
       let totalDirectCostValue = matCostValue + pkgCostValue + laborCostValue;
       
       let mrkCostValue = totalDirectCostValue * 15 / 100;
       let rsrchCostValue = totalDirectCostValue * 3 / 100;
       let totalIndirectCostValue = totalDirectCostValue * 20 / 100;
       // let totalStdCostValue = parseFloat(standard.CostTOT, 10);
-      let totalStdCostValue = totalDirectCostValue + mrkCostValue + rsrchCostValue + totalIndirectCostValue;
+      let fundManuCostValue = totalDirectCostValue * 30 / 100;
+      let totalStdCostValue = totalDirectCostValue + mrkCostValue + rsrchCostValue + totalIndirectCostValue+ fundManuCostValue;
 
       // let totalStdCostValue =
       //   matCostValue +
@@ -1629,6 +1660,11 @@ class CalculateFlexibleVariance extends Component {
         currency: "USD",
       });
 
+      let fundManuCost = fundManuCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
       this.setState({
         standard,
         proId,
@@ -1640,6 +1676,7 @@ class CalculateFlexibleVariance extends Component {
         totalDirectCost,
         totalIndirectCost,
         totalStdCost,
+        fundManuCost,
         matCostValue,
         pkgCostValue,
         laborCostValue,
@@ -1648,6 +1685,7 @@ class CalculateFlexibleVariance extends Component {
         totalDirectCostValue,
         totalIndirectCostValue,
         totalStdCostValue,
+        fundManuCostValue,
       });
       return true;
     });
@@ -1663,13 +1701,15 @@ class CalculateFlexibleVariance extends Component {
       let matActCostValue = parseFloat(actual.directMaterialCost, 10)*actualUnits;
       let pkgActCostValue = parseFloat(actual.packagingMaterialCost, 10)*actualUnits;
       let laborActCostValue = parseFloat(actual.directLaborCost, 10)*actualUnits;
+      
       // let totalDirectActCostValue = parseFloat(actual.totalDirectCost, 10);
       let totalDirectActCostValue = matActCostValue + pkgActCostValue + laborActCostValue;
       let mrkActCostValue = totalDirectActCostValue * 15 / 100;
       let rsrchActCostValue = totalDirectActCostValue * 3 / 100;
       let totalIndirectActCostValue = totalDirectActCostValue * 20 / 100;
+      let fundManuActCostValue = totalDirectActCostValue * 30 / 100;
       // let totalActCostValue = parseFloat(actual.CostTOT, 10);
-      let totalActCostValue = totalDirectActCostValue + mrkActCostValue + rsrchActCostValue + totalIndirectActCostValue
+      let totalActCostValue = totalDirectActCostValue + mrkActCostValue + rsrchActCostValue + totalIndirectActCostValue + fundManuActCostValue;
 
       // let totalStdCostValue =
       //   matCostValue +
@@ -1714,6 +1754,11 @@ class CalculateFlexibleVariance extends Component {
         currency: "USD",
       });
 
+      let fundManuActCost = fundManuActCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
       this.setState({
         actual,
         proId,
@@ -1725,6 +1770,7 @@ class CalculateFlexibleVariance extends Component {
         totalDirectActCost,
         totalIndirectActCost,
         totalActCost,
+        fundManuActCost,
         matActCostValue,
         pkgActCostValue,
         laborActCostValue,
@@ -1733,6 +1779,7 @@ class CalculateFlexibleVariance extends Component {
         totalDirectActCostValue,
         totalIndirectActCostValue,
         totalActCostValue,
+        fundManuActCostValue,
       });
       return true;
     });
@@ -1750,8 +1797,9 @@ class CalculateFlexibleVariance extends Component {
       let mrkFlexCostValue = totalDirectFlexCostValue * 15 / 100;
       let rsrchFlexCostValue = totalDirectFlexCostValue * 3 / 100;
       let totalIndirectFlexCostValue = totalDirectFlexCostValue * 20 / 100;
+      let fundManuFlexCostValue = totalDirectFlexCostValue * 30 / 100;
       // let totalFlexCostValue = parseFloat(standard.CostTOT, 10);
-      let totalFlexCostValue = totalDirectFlexCostValue + mrkFlexCostValue + rsrchFlexCostValue + totalIndirectFlexCostValue;
+      let totalFlexCostValue = totalDirectFlexCostValue + mrkFlexCostValue + rsrchFlexCostValue + totalIndirectFlexCostValue + fundManuFlexCostValue;
 
       // let totalStdCostValue =
       //   matCostValue +
@@ -1796,6 +1844,12 @@ class CalculateFlexibleVariance extends Component {
         currency: "USD",
       });
 
+       
+      let fundManuFlexCost = fundManuFlexCostValue.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      });
+
       this.setState({
         standard,
         proId,
@@ -1806,6 +1860,7 @@ class CalculateFlexibleVariance extends Component {
         rsrchFlexCost,
         totalDirectFlexCost,
         totalIndirectFlexCost,
+        fundManuFlexCost,
         totalFlexCost,
         matFlexCostValue,
         pkgFlexCostValue,
@@ -1815,6 +1870,7 @@ class CalculateFlexibleVariance extends Component {
         totalDirectFlexCostValue,
         totalIndirectFlexCostValue,
         totalFlexCostValue,
+        fundManuFlexCostValue,
       });
       return true;
 
@@ -2116,6 +2172,31 @@ class CalculateFlexibleVariance extends Component {
                       })}
                     </td>
                     <td>{this.state.totalIndirectCost}</td>
+                  </tr>
+                  <tr>
+                    <td>MANAGERIAL AND FUNDING COSTS </td>
+                    <td>{this.state.fundManuActCost}</td>
+                    <td>
+                      {Math.abs(
+                        this.state.fundManuActCostValue -
+                        this.state.fundManuFlexCostValue
+                      ).toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </td>
+                    <td>{this.state.fundManuFlexCost}</td>
+
+                    <td>
+                      {Math.abs(
+                        this.state.fundManuFlexCostValue -
+                        this.state.fundManuCostValue
+                      ).toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </td>
+                    <td>{this.state.fundManuCost}</td>
                   </tr>
                   <tr>
                     <td> Marketing </td>
