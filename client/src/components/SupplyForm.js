@@ -999,8 +999,39 @@ class RequestMaterials extends Component {
 
     const proSpecs = await this.props.pcContract.methods.getProductSpecs(product).call();
     const proRequests = await this.props.pcContract.methods.getProductRequests(product).call();
+    const materialInfo = await this.props.pcContract.methods.getMaterials().call();
 
-    if(proRequests.length >= proSpecs.length) {
+    const specNames = proSpecs.map(spec => {
+      return spec.materialName;
+    })
+
+    const materialToRequest = materialInfo.filter( mat => {
+      return mat.materialID === id;
+    })
+
+
+    const materialName = materialToRequest.map( mat => {
+      return mat.materialName;
+    });
+
+    // const materialsId = materialInfo.map( mat => {
+    //   return mat.materialID;
+    // })
+
+    // console.log(id)
+    // console.log(specNames)
+    // console.log(materialInfo);
+    // console.log(materialToRequest);
+    // console.log(materialsId);
+
+    if(!specNames.includes(materialName.toString())) { 
+       
+        this.setState({msg: `YOU CAN'T REQUEST ${ materialName.toString() === '' ?  'THIS MATERIAL': materialName.toString().toUpperCase() } FOR THIS PRODUCT!` , alert:true})
+        setTimeout(() => {
+          this.setState({ msg: " " });
+        }, 3000);
+     
+    } else if ((proRequests.length >= proSpecs.length)) {
       this.setState({msg: 'YOUR REQUESTED ALL REQUIRED MATERIALS FOR THIS PRODUCT!' , alert:true})
       setTimeout(() => {
         this.setState({ msg: " " });
@@ -1021,8 +1052,32 @@ class RequestMaterials extends Component {
     setTimeout(() => {
       this.setState({ requestInfo: " " });
     }, 20000);
-
     }
+    
+
+    // if(proRequests.length >= proSpecs.length) {
+    //   this.setState({msg: 'YOUR REQUESTED ALL REQUIRED MATERIALS FOR THIS PRODUCT!' , alert:true})
+    //   setTimeout(() => {
+    //     this.setState({ msg: " " });
+    //   }, 3000);
+    // } else {
+    //   await this.props.pcContract.methods
+    //   .createRequest(toAddr, product, id, amount, requestCostStr)
+    //   .send({ from: this.props.account[0] })
+    //   .once("receipt", (receipt) => {
+    //     this.setState({ msg: "Request was sent successfully!" });
+    //     setTimeout(() => {
+    //       this.setState({ msg: " " });
+    //     }, 3000);
+    //   });
+    // const request = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
+    // const requestNo = request[request.length - 1].requestId;
+    // this.setState({ requestInfo: "Your Tracking Number: " + requestNo });
+    // setTimeout(() => {
+    //   this.setState({ requestInfo: " " });
+    // }, 20000);
+
+    // }
    
 
   };
@@ -1341,7 +1396,7 @@ class RequestMaterials extends Component {
             REQUEST
           </button>
 
-          <button className={`${toggled} btn`} onClick={this.addBatchRequest}>
+          <button disabled className={`${toggled} btn`} onClick={this.addBatchRequest}>
             CREATE BATCH REQUEST
           </button>
         </div>

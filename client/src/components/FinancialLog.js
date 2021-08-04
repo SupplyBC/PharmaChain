@@ -2258,7 +2258,8 @@ class CalculatePriceVariance extends Component {
     console.log(materialActualAmount);
     this.setState({materialActualAmount})
 
-    const requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
+    // const requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
+    const requests = await this.props.pcContract.methods.getProductRequests(proId).call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
@@ -2305,6 +2306,7 @@ class CalculatePriceVariance extends Component {
       return matCostValue;
 
     })
+    // console.log(materialCosts);
     this.setState({materialCosts});
     // substract two arrays and return positive numbers
     // based on 
@@ -2314,6 +2316,7 @@ class CalculatePriceVariance extends Component {
     this.setState({costDiff})
 
     const priceVariance = costDiff.map( (x, i) => x * materialActualAmount[i] ).map( x => x );
+    // console.log(priceVariance)
 
     const priceVarianceStrs = priceVariance.map( (variance , index) => {
      let costStr = variance.toLocaleString(
@@ -2335,6 +2338,7 @@ class CalculatePriceVariance extends Component {
           "en-US",
           { style: "currency", currency: "USD" }
         );
+    // console.log(totalVariance,totalVarianceStr)
     this.setState({totalVariance,totalVarianceStr})
 
     if (
@@ -2516,7 +2520,7 @@ class CalculateQuantityVariance extends Component {
     console.log(materialActualAmount);
     this.setState({materialActualAmount})
 
-    const requests = await this.props.pcContract.methods.getMyRequests(this.props.account[0]).call();
+    const requests = await this.props.pcContract.methods.getProductRequests(proId).call();
     const matRequested = requests.map(request => {
       let id = request.materialID;
       let matRequests = [...this.state.requested, id]
