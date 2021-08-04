@@ -2656,7 +2656,7 @@ class CalculateQuantityVariance extends Component {
           <div className="form-row">
             <h4 style={{marginBottom: '10px'}}>Review Direct-Cost Quantity Variance</h4>
             <p style={{backgroundColor:'rgba(17, 17, 17, 0.873)' , padding: '19px' , borderRadius: '25px' , fontSize: '14px'}}>
-              <em>**For simpilcity, It is assumed that the actual and standard product quantity are the same. As a result,
+              <em>**For simpilcity, It is assumed that the actual and standard used material quantity  are the same. As a result,
               quantity variance should evaluate to $0.00</em>
             </p>
             <label style={{ marginRight: "5px" }}> Product ID: </label>
